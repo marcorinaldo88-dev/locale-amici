@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏠 Il Locale — Gestione con gli amici</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============ STILE SCHERZOSO ============ */
+:root{
+  --coral:#ff5d73; --giallo:#ffd166; --teal:#2ec4b6; --viola:#9b5de5;
+  --blu:#4d96ff; --arancio:#ff8c42; --scuro:#2b2d42; --crema:#fff7e6;
+  --ombra:0 6px 0 rgba(43,45,66,.12); --ombra-soft:0 10px 30px rgba(43,45,66,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Fredoka',system-ui,sans-serif; color:var(--scuro);
+  background:linear-gradient(135deg,#fff7e6 0%,#ffe9ec 45%,#e8fbf8 100%);
+  background-attachment:fixed; min-height:100vh; line-height:1.4;
+}
+h1,h2,h3{font-weight:700;line-height:1.15}
+button{font-family:inherit;cursor:pointer}
+input,select{font-family:inherit}
+
+/* ---- Confetti + Welcome ---- */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:9999}
+#welcome{
+  position:fixed;inset:0;z-index:9000;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;padding:24px;
+  background:linear-gradient(135deg,var(--viola),var(--coral) 55%,var(--arancio));
+  transition:opacity .5s ease, visibility .5s;
+}
+#welcome.via{opacity:0;visibility:hidden}
+#welcome .emoji-big{font-size:clamp(50px,12vw,110px);animation:ballo 1.2s ease-in-out infinite}
+#welcome h1{color:#fff;font-size:clamp(34px,8vw,80px);text-shadow:0 4px 0 rgba(0,0,0,.15);margin:.1em 0}
+#welcome p{color:#fff;font-size:clamp(16px,3vw,24px);opacity:.95;max-width:560px;margin-bottom:28px}
+#welcome button{
+  background:#fff;color:var(--coral);border:none;font-size:clamp(18px,3vw,24px);font-weight:700;
+  padding:16px 34px;border-radius:50px;box-shadow:0 8px 0 rgba(0,0,0,.18);transition:transform .1s;
+}
+#welcome button:active{transform:translateY(4px);box-shadow:0 4px 0 rgba(0,0,0,.18)}
+@keyframes ballo{0%,100%{transform:rotate(-8deg) scale(1)}50%{transform:rotate(8deg) scale(1.08)}}
+
+/* ---- Header / Nav ---- */
+header{text-align:center;padding:26px 16px 8px}
+header .logo{font-size:40px}
+header h1{font-size:clamp(26px,5vw,40px)}
+header .sub{color:#8a6d3b;opacity:.8;margin-top:2px;font-size:15px}
+nav{
+  display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;
+  padding:14px;position:sticky;top:0;z-index:50;
+  background:rgba(255,247,230,.75);backdrop-filter:blur(8px);margin-bottom:8px;
+}
+nav button{
+  border:3px solid var(--scuro);background:#fff;color:var(--scuro);
+  padding:10px 18px;border-radius:40px;font-size:16px;font-weight:600;
+  box-shadow:var(--ombra);transition:transform .12s,background .15s;
+}
+nav button:hover{transform:translateY(-2px) rotate(-1.5deg)}
+nav button.attivo{color:#fff}
+nav button[data-vista="home"].attivo{background:var(--blu)}
+nav button[data-vista="quote"].attivo{background:var(--coral)}
+nav button[data-vista="frigo"].attivo{background:var(--teal)}
+nav button[data-vista="pulizie"].attivo{background:var(--viola)}
+nav .spacer{flex-basis:100%;height:0}
+nav .mini{padding:8px 14px;font-size:14px;border-width:2px}
+#stato-conn,#badge-ruolo{border:2px solid var(--scuro);border-radius:40px;padding:7px 13px;font-size:13px;font-weight:600;background:#fff;white-space:nowrap}
+
+main{max-width:960px;margin:0 auto;padding:10px 16px 60px}
+.vista{display:none;animation:entra .35s ease}
+.vista.attiva{display:block}
+@keyframes entra{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* nascondi i controlli da admin agli ospiti in sola lettura */
+.sola-lettura .solo-admin{display:none!important}
+
+/* ---- Card generiche ---- */
+.card{background:#fff;border:3px solid var(--scuro);border-radius:22px;box-shadow:var(--ombra);padding:20px;margin-bottom:18px}
+.titolo-sez{font-size:clamp(22px,4vw,30px);margin-bottom:4px}
+.sottotitolo{color:#777;margin-bottom:16px;font-size:15px}
+
+.btn{border:3px solid var(--scuro);border-radius:40px;padding:9px 16px;font-weight:600;font-size:15px;background:#fff;box-shadow:0 4px 0 rgba(43,45,66,.18);transition:transform .1s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(43,45,66,.18)}
+.btn-primario{background:var(--coral);color:#fff}
+.btn-teal{background:var(--teal);color:#fff}
+.btn-viola{background:var(--viola);color:#fff}
+.btn-ghost{background:#f2f2f2}
+.btn-sm{padding:6px 12px;font-size:13px;border-width:2px;box-shadow:0 3px 0 rgba(43,45,66,.15)}
+
+.riga{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input[type=text],input[type=number],input[type=password]{border:3px solid var(--scuro);border-radius:14px;padding:10px 14px;font-size:15px;min-width:0}
+input:focus,select:focus{outline:3px solid var(--giallo)}
+label.campo{display:block;margin:12px 0}
+label.campo span{display:block;font-weight:600;margin-bottom:5px;font-size:14px}
+label.campo input{width:100%}
+
+/* ---- Stat cards ---- */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.stat{border-radius:20px;padding:18px;color:#fff;text-align:center;box-shadow:var(--ombra)}
+.stat .n{font-size:30px;font-weight:700;margin-top:4px}
+.stat .lbl{font-size:14px;opacity:.95}
+.stat.c1{background:var(--blu)} .stat.c2{background:var(--coral)}
+.stat.c3{background:var(--teal)} .stat.c4{background:var(--viola)}
+.stat.pos{background:var(--teal)} .stat.neg{background:var(--coral)}
+
+/* ---- Quote ---- */
+.mese-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0 16px}
+.mese-nav select{border:3px solid var(--scuro);border-radius:14px;padding:10px 14px;font-size:17px;font-weight:600;background:#fff;text-align:center}
+.freccia{border:3px solid var(--scuro);background:var(--giallo);border-radius:50%;width:44px;height:44px;font-size:20px;font-weight:700;box-shadow:0 4px 0 rgba(43,45,66,.2)}
+.freccia:active{transform:translateY(3px)}
+.membro-riga{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:16px;background:#faf7f0;border:2px dashed #e3d9c4;margin-bottom:10px}
+.membro-riga.pagato{background:#e7fbf5;border-color:var(--teal);border-style:solid}
+.membro-nome{font-weight:600;font-size:16px}
+.toggle-quota{border:3px solid var(--scuro);border-radius:40px;padding:8px 16px;font-weight:700;font-size:14px;background:#fff;white-space:nowrap;display:inline-block}
+.toggle-quota.si{background:var(--teal);color:#fff}
+.toggle-quota.no{background:#ffe3e7;color:var(--coral)}
+.progress{height:16px;background:#eee;border-radius:40px;overflow:hidden;border:2px solid var(--scuro);margin-top:6px}
+.progress>div{height:100%;background:linear-gradient(90deg,var(--teal),var(--giallo));transition:width .4s}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#f2eee4;border:2px solid #ddd3bd;border-radius:40px;padding:5px 10px 5px 12px;font-size:14px;margin:4px 4px 0 0}
+.chip button{border:none;background:var(--coral);color:#fff;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:1}
+
+/* ---- Frigo ---- */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.prod{border:3px solid var(--scuro);border-radius:20px;padding:16px;background:#fff;box-shadow:var(--ombra);transition:transform .12s}
+.prod:hover{transform:translateY(-3px) rotate(-.6deg)}
+.prod h3{font-size:19px;margin-bottom:8px}
+.prod .prezzi{font-size:14px;color:#555;line-height:1.7}
+.prod .margine{color:var(--teal);font-weight:700}
+.prod .stock{display:inline-block;background:var(--giallo);border:2px solid var(--scuro);border-radius:40px;padding:2px 12px;font-weight:700;font-size:14px;margin:8px 0}
+.prod .stock.zero{background:#ffd0d6;color:var(--coral)}
+.prod-azioni{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.movimenti{list-style:none;margin-top:8px}
+.movimenti li{display:flex;justify-content:space-between;gap:8px;padding:8px 12px;border-radius:12px;background:#faf7f0;margin-bottom:6px;font-size:14px}
+.movimenti li.vendita{background:#e7fbf5}
+.movimenti li .val{font-weight:700;white-space:nowrap}
+
+/* ---- Calendario ---- */
+.cal-head{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px}
+.cal-head h3{font-size:22px;min-width:200px;text-align:center}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-dow{text-align:center;font-weight:700;font-size:13px;color:#8a6d3b;padding-bottom:4px}
+.cal-day{min-height:72px;border:2px solid #e3d9c4;border-radius:14px;padding:6px;background:#fffdf8;transition:transform .1s,border-color .15s;display:flex;flex-direction:column}
+.cal-day[onclick]{cursor:pointer}
+.cal-day[onclick]:hover{transform:scale(1.03);border-color:var(--viola)}
+.cal-day.vuoto{background:transparent;border:none}
+.cal-day.oggi{border-color:var(--coral);border-width:3px}
+.cal-day .num{font-size:14px;font-weight:600;color:#999}
+.cal-day.assegnato{background:#f3ecff;border-color:var(--viola);border-style:solid}
+.cal-day .turno{margin-top:auto;font-size:13px;font-weight:600;color:var(--viola);word-break:break-word}
+.cal-day .turno::before{content:"🧹 "}
+
+/* ---- Modal ---- */
+#modal{position:fixed;inset:0;z-index:8000;background:rgba(43,45,66,.5);display:none;align-items:center;justify-content:center;padding:18px}
+#modal.aperto{display:flex}
+#modal-body{background:#fff;border:4px solid var(--scuro);border-radius:24px;padding:24px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+#modal-body h3{margin-bottom:6px;font-size:22px}
+.modal-azioni{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+
+/* ---- Toast ---- */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);z-index:9500;
+  background:var(--scuro);color:#fff;padding:14px 24px;border-radius:40px;font-weight:600;
+  box-shadow:0 10px 30px rgba(0,0,0,.3);transition:transform .35s;max-width:90vw;text-align:center}
+#toast.su{transform:translateX(-50%) translateY(0)}
+
+.vuoto-msg{text-align:center;color:#999;padding:30px 10px;font-size:16px}
+.banner{background:#fff3cd;border:3px solid var(--arancio);color:#8a5a00}
+.banner code{background:#fff;border:1px solid #e3d9c4;border-radius:6px;padding:1px 6px;font-size:13px}
+footer{text-align:center;color:#a08c6b;font-size:13px;padding:20px}
+</style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+
+<!-- SCHERMATA DI BENVENUTO -->
+<div id="welcome">
+  <div class="emoji-big">🎉🍻🎊</div>
+  <h1>Benvenuti al locale!</h1>
+  <p>Dove le quote si pagano (quasi) sempre, le birre spariscono misteriosamente e i turni delle pulizie… beh, ci proviamo! 😎</p>
+  <button onclick="entra()">Entra nel locale 🚪✨</button>
+</div>
+
+<header>
+  <div class="logo">🏠🍻</div>
+  <h1>Il Nostro Locale</h1>
+  <div class="sub">Quote · Frigo Bar · Pulizie — condiviso con tutti in tempo reale</div>
+</header>
+
+<nav>
+  <button data-vista="home" class="attivo" onclick="mostra('home')">🏠 Home</button>
+  <button data-vista="quote" onclick="mostra('quote')">💶 Quote</button>
+  <button data-vista="frigo" onclick="mostra('frigo')">🧊 Frigo Bar</button>
+  <button data-vista="pulizie" onclick="mostra('pulizie')">🧹 Pulizie</button>
+  <span class="spacer"></span>
+  <span id="badge-ruolo">👀 Ospite</span>
+  <span id="stato-conn">⏳ Avvio…</span>
+  <button class="mini" id="btn-auth" onclick="toggleAuth()">🔑 Accedi admin</button>
+  <button class="mini" onclick="esporta()">💾 Backup</button>
+  <button class="mini solo-admin" onclick="document.getElementById('file-import').click()">📥 Importa</button>
+  <button class="mini solo-admin" onclick="resetTotale()">🧨 Reset</button>
+  <input type="file" id="file-import" accept="application/json" style="display:none" onchange="importa(event)">
+</nav>
+
+<main>
+
+  <!-- BANNER CONFIG MANCANTE -->
+  <div id="config-banner" class="card banner" style="display:none">
+    <h3 style="margin-bottom:8px">⚙️ Manca la configurazione Firebase</h3>
+    <p>Il sito è pronto, ma non è ancora collegato al database condiviso. Apri <code>index.html</code>, trova il blocco <code>firebaseConfig</code> in cima allo script e incolla la config del tuo progetto Firebase.</p>
+  </div>
+
+  <!-- ===== HOME ===== -->
+  <section id="vista-home" class="vista attiva">
+    <div class="card">
+      <h2 class="titolo-sez">Ciao capo! 👋</h2>
+      <p class="sottotitolo">Ecco come va il locale a colpo d'occhio.</p>
+      <div class="stat-grid" id="home-stats"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:8px">Cosa vuoi gestire?</h3>
+      <div class="riga">
+        <button class="btn btn-primario" onclick="mostra('quote')">💶 Segna le quote</button>
+        <button class="btn btn-teal" onclick="mostra('frigo')">🧊 Apri il frigo bar</button>
+        <button class="btn btn-viola" onclick="mostra('pulizie')">🧹 Chi pulisce?</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== QUOTE ===== -->
+  <section id="vista-quote" class="vista">
+    <div class="card">
+      <h2 class="titolo-sez">💶 Quote Mensili</h2>
+      <p class="sottotitolo">Chi ha versato? Chi fa finta di dimenticarsene? Qui si scopre tutto.</p>
+
+      <div class="riga solo-admin" style="margin-bottom:10px">
+        <input type="text" id="nuovo-membro" placeholder="Nome del ragazzo…" style="flex:1" onkeydown="if(event.key==='Enter')aggiungiMembro()">
+        <button class="btn btn-primario" onclick="aggiungiMembro()">➕ Aggiungi</button>
+      </div>
+      <div id="lista-chip"></div>
+
+      <div class="riga solo-admin" style="margin-top:14px">
+        <label class="campo" style="margin:0">
+          <span>Importo quota (€/mese)</span>
+          <input type="number" id="importo-quota" min="0" step="0.5" style="width:120px" onchange="salvaImporto()">
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="mese-nav">
+        <button class="freccia" onclick="cambiaMese(-1)">‹</button>
+        <select id="select-mese" onchange="renderQuote()"></select>
+        <button class="freccia" onclick="cambiaMese(1)">›</button>
+      </div>
+      <div id="riepilogo-mese"></div>
+      <div id="lista-quote" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <!-- ===== FRIGO BAR ===== -->
+  <section id="vista-frigo" class="vista">
+    <div class="card">
+      <h2 class="titolo-sez">🧊 Frigo Bar</h2>
+      <p class="sottotitolo">Inventario, vendite e il conto dei guadagni che si aggiorna da solo. 🤑</p>
+      <div class="stat-grid" id="frigo-stats"></div>
+    </div>
+
+    <div class="card solo-admin">
+      <h3 style="margin-bottom:10px">➕ Nuovo prodotto</h3>
+      <div class="riga">
+        <input type="text" id="p-nome" placeholder="Es. Birra media" style="flex:2;min-width:140px">
+        <input type="number" id="p-acquisto" placeholder="Costo acq. €" min="0" step="0.1" style="flex:1;min-width:110px">
+        <input type="number" id="p-vendita" placeholder="Prezzo vend. €" min="0" step="0.1" style="flex:1;min-width:110px">
+        <input type="number" id="p-qta" placeholder="Qtà iniziale" min="0" step="1" style="flex:1;min-width:100px">
+        <button class="btn btn-teal" onclick="aggiungiProdotto()">Aggiungi al frigo</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom:12px">📦 Inventario</h3>
+      <div class="prod-grid" id="prod-grid"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom:10px">🧾 Movimenti recenti</h3>
+      <ul class="movimenti" id="lista-movimenti"></ul>
+    </div>
+  </section>
+
+  <!-- ===== PULIZIE ===== -->
+  <section id="vista-pulizie" class="vista">
+    <div class="card">
+      <h2 class="titolo-sez">🧹 Calendario Pulizie</h2>
+      <p class="sottotitolo">Clicca su un giorno per assegnare il turno. Niente scuse! 🫡</p>
+      <div class="cal-head">
+        <button class="freccia" onclick="cambiaMeseCal(-1)">‹</button>
+        <h3 id="cal-titolo"></h3>
+        <button class="freccia" onclick="cambiaMeseCal(1)">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+  </section>
+
+</main>
+
+<div id="modal"><div id="modal-body"></div></div>
+<div id="toast"></div>
+
+<footer>
+  Fatto con 🍺 per il locale · dati condivisi in tempo reale via Firebase · <b>💾 Backup</b> per scaricare una copia
+</footer>
+
+<script type="module">
+/* ============================================================
+   CONFIGURAZIONE
+   1) firebaseConfig: la config del tuo progetto Firebase.
+   2) ADMIN_EMAILS: le email Google che possono MODIFICARE.
+      (le stesse vanno messe anche nelle regole di Firestore)
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyDGEWMVEkPQgA0WNIg07hiHzWG_lqQa5pU",
+  authDomain: "locale-amici.firebaseapp.com",
+  projectId: "locale-amici",
+  storageBucket: "locale-amici.firebasestorage.app",
+  messagingSenderId: "532851981311",
+  appId: "1:532851981311:web:75fbd3f17ac713a8e645ca",
+  measurementId: "G-MN8S4ZE7MN"
+};
+
+const ADMIN_EMAILS = [
+  "giosuemilillo@gmail.com",
+  "marcorinaldo88@gmail.com",
+  "ottomanomatteo01@gmail.com"
+];
+/* ============================================================ */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInAnonymously, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc,
+  addDoc, getDocs, writeBatch, query, orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+/* ================= STATO ================= */
+let stato = { membri: [], importoQuota: 10, pagamenti: {}, frigo: { prodotti: [], movimenti: [] }, pulizie: {} };
+let db = null, auth = null, pronto = false, listenerAvviati = false;
+let utente = null, ruolo = 'viewer';   // 'admin' | 'viewer'
+
+/* ================= UTILITÀ ================= */
+const MESI_IT = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const euro = n => Number(n||0).toLocaleString('it-IT',{style:'currency',currency:'EUR'});
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('su'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('su'),2800); }
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function oggiStr(){ const d=new Date(); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`; }
+function generaMesi(){ const out=[]; let y=2026,m=10; while(y<2028||(y===2028&&m<=12)){ out.push(`${y}-${String(m).padStart(2,'0')}`); if(++m>12){m=1;y++;} } return out; }
+const MESI = generaMesi();
+function labelMese(k){ const [y,m]=k.split('-'); return `${MESI_IT[+m-1]} ${y}`; }
+function setStato(txt){ const e=document.getElementById('stato-conn'); if(e) e.textContent=txt; }
+const isAdmin = ()=> ruolo==='admin';
+function isAdminUser(u){ return !!u && !u.isAnonymous && ADMIN_EMAILS.map(e=>e.toLowerCase()).includes((u.email||'').toLowerCase()); }
+
+/* ================= MODALE ================= */
+function modalInput(titolo, campi, opzioni={}){
+  return new Promise(resolve=>{
+    const ov=document.getElementById('modal'), body=document.getElementById('modal-body');
+    body.innerHTML = `<h3>${esc(titolo)}</h3>` + campi.map((f,i)=>{
+      const listId=f.lista?`dl${i}`:''; const dl=f.lista?`<datalist id="${listId}">${f.lista.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`:'';
+      return `<label class="campo"><span>${esc(f.label)}</span>
+        <input id="mf${i}" type="${f.type||'text'}" value="${esc(f.value??'')}" ${f.min!=null?`min="${f.min}"`:''} ${f.step!=null?`step="${f.step}"`:''} ${f.lista?`list="${listId}"`:''} ${f.placeholder?`placeholder="${esc(f.placeholder)}"`:''}>${dl}</label>`;
+    }).join('') +
+    `<div class="modal-azioni">
+       ${opzioni.rimuovi?`<button type="button" class="btn btn-ghost btn-sm" id="m-rim">🗑️ Rimuovi</button>`:''}
+       <button type="button" class="btn btn-ghost btn-sm" id="m-no">Annulla</button>
+       <button type="button" class="btn btn-primario btn-sm" id="m-ok">${esc(opzioni.okLabel||'Conferma')}</button>
+     </div>`;
+    ov.classList.add('aperto');
+    const primo=body.querySelector('input'); if(primo) setTimeout(()=>primo.focus(),60);
+    const raccogli=()=>{ const o={}; campi.forEach((f,i)=>o[f.name]=document.getElementById('mf'+i).value.trim()); return o; };
+    const chiudi=v=>{ ov.classList.remove('aperto'); document.removeEventListener('keydown',onKey); ov.onclick=null; resolve(v); };
+    document.getElementById('m-ok').onclick=()=>chiudi(raccogli());
+    document.getElementById('m-no').onclick=()=>chiudi(null);
+    if(opzioni.rimuovi) document.getElementById('m-rim').onclick=()=>chiudi({__rimuovi:true});
+    function onKey(e){ if(e.key==='Escape')chiudi(null); if(e.key==='Enter'){e.preventDefault();chiudi(raccogli());} }
+    document.addEventListener('keydown',onKey);
+    ov.onclick=e=>{ if(e.target===ov) chiudi(null); };
+  });
+}
+
+/* ================= NAVIGAZIONE / RENDER ================= */
+function mostra(vista){
+  document.querySelectorAll('.vista').forEach(v=>v.classList.remove('attiva'));
+  document.getElementById('vista-'+vista).classList.add('attiva');
+  document.querySelectorAll('nav button[data-vista]').forEach(b=>b.classList.toggle('attivo', b.dataset.vista===vista));
+  refresh(); window.scrollTo({top:0,behavior:'smooth'});
+}
+function vistaAttiva(){ const s=document.querySelector('.vista.attiva'); return s?s.id.replace('vista-',''):'home'; }
+function refresh(){
+  const v=vistaAttiva();
+  if(v==='home') renderHome();
+  else if(v==='quote'){ renderChip(); renderQuote(); }
+  else if(v==='frigo') renderFrigo();
+  else if(v==='pulizie') renderCalendario();
+}
+
+/* ---- HOME ---- */
+function meseCorrenteKey(){ const o=new Date(); const k=`${o.getFullYear()}-${String(o.getMonth()+1).padStart(2,'0')}`; return MESI.includes(k)?k:MESI[0]; }
+function renderHome(){
+  const mk=meseCorrenteKey(), pag=stato.pagamenti[mk]||{};
+  const versati=stato.membri.filter(m=>pag[m]).length;
+  const spesa=stato.frigo.movimenti.filter(x=>x.tipo==='acquisto').reduce((s,x)=>s+x.totale,0);
+  const vend=stato.frigo.movimenti.filter(x=>x.tipo==='vendita').reduce((s,x)=>s+x.totale,0);
+  const guad=vend-spesa, prossimo=prossimoTurno();
+  document.getElementById('home-stats').innerHTML = `
+    <div class="stat c1"><div class="lbl">👥 Ragazzi</div><div class="n">${stato.membri.length}</div></div>
+    <div class="stat c2"><div class="lbl">💶 ${labelMese(mk)}</div><div class="n">${versati}/${stato.membri.length}</div><div class="lbl">raccolti ${euro(versati*stato.importoQuota)}</div></div>
+    <div class="stat ${guad>=0?'pos':'neg'}"><div class="lbl">🧊 Guadagno frigo</div><div class="n">${euro(guad)}</div></div>
+    <div class="stat c4"><div class="lbl">🧹 Prossimo turno</div><div class="n" style="font-size:20px">${prossimo?esc(prossimo.nome):'—'}</div><div class="lbl">${prossimo?prossimo.data:'nessuno in programma'}</div></div>`;
+}
+function prossimoTurno(){
+  const oggi=new Date(); oggi.setHours(0,0,0,0);
+  const chiavi=Object.keys(stato.pulizie).filter(k=>stato.pulizie[k]).sort();
+  for(const k of chiavi){ const d=new Date(k+'T00:00:00'); if(d>=oggi){ const [,m,g]=k.split('-'); return {nome:stato.pulizie[k], data:`${+g} ${MESI_IT[+m-1]}`}; } }
+  return null;
+}
+
+/* ---- QUOTE ---- */
+let meseSel=null;
+function renderChip(){
+  const imp=document.getElementById('importo-quota'); imp.value=stato.importoQuota; imp.disabled=!isAdmin();
+  const box=document.getElementById('lista-chip');
+  if(!stato.membri.length){ box.innerHTML=`<div class="vuoto-msg" style="padding:14px">Nessun ragazzo ancora.${isAdmin()?' Aggiungine uno qui sopra! 👆':''}</div>`; return; }
+  box.innerHTML=stato.membri.map(m=>`<span class="chip">${esc(m)}${isAdmin()?` <button onclick="rimuoviMembro('${esc(m)}')" title="Rimuovi">✕</button>`:''}</span>`).join('');
+}
+function popolaSelectMese(){ const sel=document.getElementById('select-mese'); sel.innerHTML=MESI.map(k=>`<option value="${k}">${labelMese(k)}</option>`).join(''); if(!meseSel) meseSel=meseCorrenteKey(); sel.value=meseSel; }
+function cambiaMese(dir){ const i=MESI.indexOf(document.getElementById('select-mese').value); const j=Math.min(MESI.length-1,Math.max(0,i+dir)); document.getElementById('select-mese').value=MESI[j]; renderQuote(); }
+function renderQuote(){
+  meseSel=document.getElementById('select-mese').value;
+  const pag=stato.pagamenti[meseSel]||{}, lista=document.getElementById('lista-quote');
+  if(!stato.membri.length){ lista.innerHTML=`<div class="vuoto-msg">Nessun ragazzo da mostrare</div>`; document.getElementById('riepilogo-mese').innerHTML=''; return; }
+  const versati=stato.membri.filter(m=>pag[m]).length, tot=stato.membri.length, perc=tot?Math.round(versati/tot*100):0;
+  document.getElementById('riepilogo-mese').innerHTML=`
+    <div class="riga" style="justify-content:space-between">
+      <b>${versati} su ${tot} hanno versato</b>
+      <b style="color:var(--teal)">Raccolto: ${euro(versati*stato.importoQuota)} / ${euro(tot*stato.importoQuota)}</b>
+    </div>
+    <div class="progress"><div style="width:${perc}%"></div></div>`;
+  lista.innerHTML=stato.membri.map(m=>{
+    const ok=!!pag[m];
+    const ctrl=isAdmin()
+      ? `<button class="toggle-quota ${ok?'si':'no'}" onclick="toggleQuota('${esc(m)}')">${ok?'Versata':'Non versata'}</button>`
+      : `<span class="toggle-quota ${ok?'si':'no'}">${ok?'Versata':'Non versata'}</span>`;
+    return `<div class="membro-riga ${ok?'pagato':''}"><span class="membro-nome">${ok?'✅':'⏳'} ${esc(m)}</span>${ctrl}</div>`;
+  }).join('');
+}
+
+/* ---- FRIGO ---- */
+function totaliFrigo(){
+  const spesa=stato.frigo.movimenti.filter(x=>x.tipo==='acquisto').reduce((s,x)=>s+x.totale,0);
+  const vend=stato.frigo.movimenti.filter(x=>x.tipo==='vendita').reduce((s,x)=>s+x.totale,0);
+  return {spesa, vend, guad:vend-spesa};
+}
+function renderFrigo(){
+  const {spesa,vend,guad}=totaliFrigo();
+  document.getElementById('frigo-stats').innerHTML=`
+    <div class="stat c2"><div class="lbl">💸 Spesa totale</div><div class="n">${euro(spesa)}</div></div>
+    <div class="stat c3"><div class="lbl">💰 Vendite totali</div><div class="n">${euro(vend)}</div></div>
+    <div class="stat ${guad>=0?'pos':'neg'}"><div class="lbl">📈 Guadagno</div><div class="n">${euro(guad)}</div></div>`;
+  const grid=document.getElementById('prod-grid');
+  if(!stato.frigo.prodotti.length){ grid.innerHTML=`<div class="vuoto-msg">Il frigo è vuoto! 🕳️</div>`; }
+  else grid.innerHTML=stato.frigo.prodotti.map(p=>{
+    const margine=p.vendita-p.acquisto;
+    const azioni=isAdmin()?`<div class="prod-azioni">
+        <button class="btn btn-teal btn-sm" onclick="vendi('${p.id}')">🤑 Vendi</button>
+        <button class="btn btn-ghost btn-sm" onclick="rifornisci('${p.id}')">📦 Rifornisci</button>
+        <button class="btn btn-ghost btn-sm" onclick="modificaProdotto('${p.id}')">✏️</button>
+        <button class="btn btn-ghost btn-sm" onclick="eliminaProdotto('${p.id}')">🗑️</button>
+      </div>`:'';
+    return `<div class="prod">
+      <h3>${esc(p.nome)}</h3>
+      <div class="prezzi">🛒 Acquisto: <b>${euro(p.acquisto)}</b><br>🏷️ Vendita: <b>${euro(p.vendita)}</b><br>Margine: <span class="margine">${euro(margine)}/pz</span></div>
+      <div class="stock ${p.stock<=0?'zero':''}">📦 ${p.stock} pz</div>${azioni}</div>`;
+  }).join('');
+  const ul=document.getElementById('lista-movimenti');
+  const movs=[...stato.frigo.movimenti].slice(-15).reverse();
+  if(!movs.length){ ul.innerHTML=`<div class="vuoto-msg" style="padding:14px">Ancora nessun movimento.</div>`; }
+  else ul.innerHTML=movs.map(x=>`<li class="${x.tipo==='vendita'?'vendita':''}">
+      <span>${x.tipo==='vendita'?'🤑':'🛒'} ${esc(x.nome)} ×${x.qta} <small style="color:#999">${esc(x.data||'')}</small></span>
+      <span class="val" style="color:${x.tipo==='vendita'?'var(--teal)':'var(--coral)'}">${x.tipo==='vendita'?'+':'−'}${euro(x.totale)}</span></li>`).join('');
+}
+
+/* ---- CALENDARIO ---- */
+let calAnno, calMese;
+function initCal(){ const o=new Date(); calAnno=o.getFullYear(); calMese=o.getMonth(); if(calAnno<2026){calAnno=2026;calMese=9;} }
+function cambiaMeseCal(d){ calMese+=d; if(calMese<0){calMese=11;calAnno--;} if(calMese>11){calMese=0;calAnno++;} renderCalendario(); }
+function renderCalendario(){
+  document.getElementById('cal-titolo').textContent=`${MESI_IT[calMese]} ${calAnno}`;
+  const grid=document.getElementById('cal-grid');
+  const dow=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+  let html=dow.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  const offset=(new Date(calAnno,calMese,1).getDay()+6)%7, giorni=new Date(calAnno,calMese+1,0).getDate();
+  const o=new Date(); const oggiStamp=`${o.getFullYear()}-${String(o.getMonth()+1).padStart(2,'0')}-${String(o.getDate()).padStart(2,'0')}`;
+  for(let i=0;i<offset;i++) html+=`<div class="cal-day vuoto"></div>`;
+  for(let g=1;g<=giorni;g++){
+    const key=`${calAnno}-${String(calMese+1).padStart(2,'0')}-${String(g).padStart(2,'0')}`;
+    const turno=stato.pulizie[key];
+    const click=isAdmin()?`onclick="assegnaTurno('${key}','${g} ${MESI_IT[calMese]}')"`:'';
+    html+=`<div class="cal-day ${turno?'assegnato':''} ${key===oggiStamp?'oggi':''}" ${click}><span class="num">${g}</span>${turno?`<span class="turno">${esc(turno)}</span>`:''}</div>`;
+  }
+  grid.innerHTML=html;
+}
+
+/* ================= AZIONI (solo admin) ================= */
+function puoiModificare(){
+  if(!pronto){ toast('Un attimo, mi sto collegando… ⏳'); return false; }
+  if(!isAdmin()){ toast('Solo gli admin possono modificare 👀 Accedi con Google.'); return false; }
+  return true;
+}
+async function aggiungiMembro(){
+  if(!puoiModificare()) return;
+  const inp=document.getElementById('nuovo-membro'), nome=inp.value.trim();
+  if(!nome) return;
+  if(stato.membri.includes(nome)){ toast('C\'è già un '+nome+'! 😅'); return; }
+  inp.value='';
+  await setDoc(doc(db,'meta','membri'), {lista:[...stato.membri, nome]});
+  toast('Benvenuto '+nome+'! 🎉');
+}
+async function rimuoviMembro(nome){ if(!puoiModificare()) return; await setDoc(doc(db,'meta','membri'), {lista:stato.membri.filter(m=>m!==nome)}); }
+async function salvaImporto(){ if(!puoiModificare()) return; const v=parseFloat(document.getElementById('importo-quota').value)||0; await setDoc(doc(db,'meta','config'), {importoQuota:v}, {merge:true}); }
+async function toggleQuota(m){
+  if(!puoiModificare()) return;
+  const cur=(stato.pagamenti[meseSel]||{})[m]||false;
+  await setDoc(doc(db,'pagamenti',meseSel), {[m]:!cur}, {merge:true});
+  if(!cur) toast(m+' ha pagato! 💸');
+}
+async function aggiungiProdotto(){
+  if(!puoiModificare()) return;
+  const nome=document.getElementById('p-nome').value.trim();
+  const acq=parseFloat(document.getElementById('p-acquisto').value), ven=parseFloat(document.getElementById('p-vendita').value);
+  const qta=parseInt(document.getElementById('p-qta').value)||0;
+  if(!nome){ toast('Dagli un nome! 🙃'); return; }
+  if(isNaN(acq)||isNaN(ven)){ toast('Inserisci costo e prezzo 💶'); return; }
+  const ref=await addDoc(collection(db,'prodotti'), {nome,acquisto:acq,vendita:ven,stock:qta});
+  if(qta>0) await addDoc(collection(db,'movimenti'), {tipo:'acquisto',prodottoId:ref.id,nome,qta,totale:qta*acq,data:oggiStr(),ts:Date.now()});
+  ['p-nome','p-acquisto','p-vendita','p-qta'].forEach(id=>document.getElementById(id).value='');
+  toast(nome+' nel frigo! 🧊');
+}
+async function vendi(id){
+  if(!puoiModificare()) return;
+  const p=stato.frigo.prodotti.find(x=>x.id===id); if(!p) return;
+  const r=await modalInput(`Vendi — ${p.nome}`, [{name:'qta',label:'Quante ne vendi?',type:'number',value:1,min:1,step:1}], {okLabel:'Vendi! 🤑'});
+  if(!r) return; const q=parseInt(r.qta)||0; if(q<=0) return;
+  if(q>p.stock){ toast('Non ne hai abbastanza! (ce ne sono '+p.stock+') 😬'); return; }
+  await updateDoc(doc(db,'prodotti',id), {stock:p.stock-q});
+  await addDoc(collection(db,'movimenti'), {tipo:'vendita',prodottoId:id,nome:p.nome,qta:q,totale:q*p.vendita,data:oggiStr(),ts:Date.now()});
+  toast(`Venduto! +${euro(q*p.vendita)} 🤑`);
+}
+async function rifornisci(id){
+  if(!puoiModificare()) return;
+  const p=stato.frigo.prodotti.find(x=>x.id===id); if(!p) return;
+  const r=await modalInput(`Rifornisci — ${p.nome}`, [
+    {name:'qta',label:'Quante ne aggiungi?',type:'number',value:1,min:1,step:1},
+    {name:'costo',label:'Costo di acquisto (€/pz)',type:'number',value:p.acquisto,min:0,step:0.1}
+  ], {okLabel:'Aggiungi 📦'});
+  if(!r) return; const q=parseInt(r.qta)||0, c=parseFloat(r.costo); if(q<=0||isNaN(c)) return;
+  await updateDoc(doc(db,'prodotti',id), {stock:p.stock+q});
+  await addDoc(collection(db,'movimenti'), {tipo:'acquisto',prodottoId:id,nome:p.nome,qta:q,totale:q*c,data:oggiStr(),ts:Date.now()});
+  toast(`+${q} pz di ${p.nome} 📦`);
+}
+async function modificaProdotto(id){
+  if(!puoiModificare()) return;
+  const p=stato.frigo.prodotti.find(x=>x.id===id); if(!p) return;
+  const r=await modalInput(`Modifica — ${p.nome}`, [
+    {name:'nome',label:'Nome',type:'text',value:p.nome},
+    {name:'acquisto',label:'Costo acquisto (€/pz)',type:'number',value:p.acquisto,min:0,step:0.1},
+    {name:'vendita',label:'Prezzo vendita (€/pz)',type:'number',value:p.vendita,min:0,step:0.1}
+  ], {okLabel:'Salva'});
+  if(!r) return;
+  const patch={}; if(r.nome)patch.nome=r.nome; if(r.acquisto!=='')patch.acquisto=parseFloat(r.acquisto); if(r.vendita!=='')patch.vendita=parseFloat(r.vendita);
+  await updateDoc(doc(db,'prodotti',id), patch); toast('Modificato ✏️');
+}
+async function eliminaProdotto(id){
+  if(!puoiModificare()) return;
+  const p=stato.frigo.prodotti.find(x=>x.id===id); if(!p) return;
+  const r=await modalInput(`Eliminare ${p.nome}?`, [], {okLabel:'Sì, elimina 🗑️'});
+  if(r===null) return;
+  await deleteDoc(doc(db,'prodotti',id)); toast(p.nome+' eliminato (i conti restano) 🧾');
+}
+async function assegnaTurno(key,label){
+  if(!puoiModificare()) return;
+  const r=await modalInput(`Turno pulizie — ${label}`, [
+    {name:'nome',label:'Chi pulisce? 🧹',type:'text',value:stato.pulizie[key]||'',lista:stato.membri,placeholder:'Scrivi o scegli un nome'}
+  ], {rimuovi:!!stato.pulizie[key], okLabel:'Salva'});
+  if(r===null) return;
+  if(r.__rimuovi||!r.nome){ await deleteDoc(doc(db,'pulizie',key)); toast('Turno liberato 🧽'); }
+  else { await setDoc(doc(db,'pulizie',key), {nome:r.nome}); toast(`Tocca a ${r.nome}! 🧹`); }
+}
+
+/* ================= BACKUP / IMPORT / RESET ================= */
+function esporta(){
+  const blob=new Blob([JSON.stringify(stato,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`locale-backup-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(a.href);
+  toast('Backup scaricato 💾');
+}
+function importa(ev){
+  const file=ev.target.files[0]; if(!file) return;
+  if(!puoiModificare()){ ev.target.value=''; return; }
+  const r=new FileReader();
+  r.onload=async()=>{
+    try{
+      const d=JSON.parse(r.result); const batch=writeBatch(db);
+      if(Array.isArray(d.membri)) batch.set(doc(db,'meta','membri'),{lista:d.membri});
+      if(d.importoQuota!=null) batch.set(doc(db,'meta','config'),{importoQuota:d.importoQuota});
+      Object.entries(d.pagamenti||{}).forEach(([mese,map])=>batch.set(doc(db,'pagamenti',mese),map));
+      Object.entries(d.pulizie||{}).forEach(([data,nome])=>batch.set(doc(db,'pulizie',data),{nome}));
+      await batch.commit();
+      for(const p of (d.frigo?.prodotti||[])) await addDoc(collection(db,'prodotti'),{nome:p.nome,acquisto:p.acquisto,vendita:p.vendita,stock:p.stock});
+      for(const m of (d.frigo?.movimenti||[])) await addDoc(collection(db,'movimenti'),{tipo:m.tipo,prodottoId:m.prodottoId||'',nome:m.nome,qta:m.qta,totale:m.totale,data:m.data||'',ts:m.ts||Date.now()});
+      toast('Dati importati nel database! 📥✅');
+    }catch(e){ console.error(e); toast('File non valido 😵'); }
+    ev.target.value='';
+  };
+  r.readAsText(file);
+}
+async function resetTotale(){
+  if(!puoiModificare()) return;
+  const r=await modalInput('Azzerare TUTTO per tutti?', [], {okLabel:'Sì, cancella tutto 🧨'});
+  if(r===null) return;
+  for(const c of ['pagamenti','prodotti','movimenti','pulizie']){
+    const snap=await getDocs(collection(db,c)); const batch=writeBatch(db); snap.forEach(dc=>batch.delete(dc.ref)); await batch.commit();
+  }
+  await deleteDoc(doc(db,'meta','membri')).catch(()=>{});
+  await deleteDoc(doc(db,'meta','config')).catch(()=>{});
+  toast('Tutto azzerato 🧨');
+}
+
+/* ================= CORIANDOLI + WELCOME ================= */
+function lanciaCoriandoli(){
+  const c=document.getElementById('confetti'), ctx=c.getContext('2d'); c.width=innerWidth; c.height=innerHeight;
+  const colori=['#ff5d73','#ffd166','#2ec4b6','#9b5de5','#4d96ff','#ff8c42'], parts=[];
+  for(let i=0;i<150;i++) parts.push({x:Math.random()*c.width,y:-20-Math.random()*c.height*.6,r:6+Math.random()*9,col:colori[~~(Math.random()*colori.length)],vy:2+Math.random()*4,vx:-2+Math.random()*4,rot:Math.random()*6.28,vr:-.2+Math.random()*.4});
+  let f=0;(function tick(){ ctx.clearRect(0,0,c.width,c.height);
+    parts.forEach(p=>{ p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;p.vy+=.03; ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.col;ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*.6);ctx.restore(); });
+    if(++f<210) requestAnimationFrame(tick); else ctx.clearRect(0,0,c.width,c.height); })();
+}
+function entra(){ document.getElementById('welcome').classList.add('via'); lanciaCoriandoli(); }
+
+/* ================= RUOLO / LOGIN ================= */
+function applicaRuolo(){
+  const admin=isAdmin();
+  document.body.classList.toggle('sola-lettura', !admin);
+  const b=document.getElementById('btn-auth'), bad=document.getElementById('badge-ruolo');
+  if(utente && !utente.isAnonymous){
+    const nome=(utente.displayName||utente.email||'').split(' ')[0];
+    b.textContent='🚪 Esci';
+    bad.textContent = admin ? `👑 Admin · ${esc(nome)}` : '👀 Sola lettura';
+    bad.style.background = admin ? 'var(--teal)' : '#eee';
+    bad.style.color = admin ? '#fff' : '#777';
+  } else {
+    b.textContent='🔑 Accedi admin';
+    bad.textContent='👀 Ospite'; bad.style.background='#eee'; bad.style.color='#777';
+  }
+  refresh();
+}
+async function toggleAuth(){
+  if(!auth){ return; }
+  try{
+    if(utente && !utente.isAnonymous){ await signOut(auth); }
+    else { await signInWithPopup(auth, new GoogleAuthProvider()); }
+  }catch(e){ console.error(e); toast('Accesso non riuscito 😕 (controlla i domini autorizzati in Firebase)'); }
+}
+
+/* ================= FIREBASE: LISTENER REALTIME ================= */
+function avviaListener(){
+  onSnapshot(doc(db,'meta','membri'), s=>{ stato.membri=(s.data()?.lista)||[]; refresh(); }, errOff);
+  onSnapshot(doc(db,'meta','config'), s=>{ stato.importoQuota=s.data()?.importoQuota??10; refresh(); }, errOff);
+  onSnapshot(collection(db,'pagamenti'), s=>{ const o={}; s.forEach(d=>o[d.id]=d.data()); stato.pagamenti=o; refresh(); }, errOff);
+  onSnapshot(collection(db,'prodotti'), s=>{ stato.frigo.prodotti=s.docs.map(d=>({id:d.id,...d.data()})); refresh(); }, errOff);
+  onSnapshot(query(collection(db,'movimenti'), orderBy('ts')), s=>{ stato.frigo.movimenti=s.docs.map(d=>({id:d.id,...d.data()})); refresh(); }, errOff);
+  onSnapshot(collection(db,'pulizie'), s=>{ const o={}; s.forEach(d=>o[d.id]=d.data()?.nome); stato.pulizie=o; refresh(); }, errOff);
+}
+function errOff(e){ console.error(e); setStato('🔴 Errore'); }
+function configMancante(){ return Object.values(firebaseConfig).some(v=>String(v).startsWith('INCOLLA_QUI')); }
+
+function avvia(){
+  if(configMancante()){ document.getElementById('config-banner').style.display='block'; setStato('⚙️ Config mancante'); return; }
+  try{
+    const app=initializeApp(firebaseConfig); db=getFirestore(app); auth=getAuth(app);
+    setStato('🔌 Connessione…');
+    onAuthStateChanged(auth, async user=>{
+      if(!user){ try{ await signInAnonymously(auth); }catch(e){ console.error(e); setStato('🔴 Auth KO'); toast('Login non riuscito: abilita "Anonimo" in Firebase 🔑'); } return; }
+      utente=user; ruolo=isAdminUser(user)?'admin':'viewer'; pronto=true; setStato('🟢 Online');
+      if(!listenerAvviati){ avviaListener(); listenerAvviati=true; }
+      if(!user.isAnonymous && ruolo!=='admin') toast('Questo account non è tra gli admin: resti in sola lettura 👀');
+      applicaRuolo();
+    });
+  }catch(e){ console.error(e); setStato('🔴 Errore'); }
+}
+
+/* ================= ESPORTA AL markup ================= */
+Object.assign(window, {
+  entra, mostra, aggiungiMembro, rimuoviMembro, salvaImporto, cambiaMese, renderQuote,
+  toggleQuota, aggiungiProdotto, vendi, rifornisci, modificaProdotto, eliminaProdotto,
+  cambiaMeseCal, assegnaTurno, esporta, importa, resetTotale, toggleAuth
+});
+
+/* ================= GO ================= */
+popolaSelectMese(); initCal(); renderHome(); lanciaCoriandoli(); avvia();
+</script>
+</body>
+</html>
