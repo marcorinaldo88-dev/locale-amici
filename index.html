@@ -33,7 +33,7 @@ header{text-align:center;padding:26px 16px 8px}
 header .logo{font-size:40px}
 header h1{font-size:clamp(26px,5vw,40px)}
 header .sub{color:#8a6d3b;opacity:.8;margin-top:2px;font-size:15px}
-nav{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;padding:14px;position:sticky;top:0;z-index:50;background:rgba(255,247,230,.75);backdrop-filter:blur(8px);margin-bottom:8px}
+nav{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;padding:14px;margin-bottom:8px}
 nav button{border:3px solid var(--scuro);background:#fff;color:var(--scuro);padding:10px 18px;border-radius:40px;font-size:16px;font-weight:600;box-shadow:var(--ombra);transition:transform .12s,background .15s}
 nav button:hover{transform:translateY(-2px) rotate(-1.5deg)}
 nav button.attivo{color:#fff}
@@ -496,10 +496,12 @@ function renderArretrati(){
 /* ---- FRIGO ---- */
 function renderFrigo(){
   const {sp:spesa,ve:vend,g:guad}=guadagnoFrigo();
+  const atteso=stato.frigo.prodotti.reduce((s,p)=>s+(p.vendita-p.acquisto)*p.stock,0);
   document.getElementById('frigo-stats').innerHTML=`
     <div class="stat c2"><div class="lbl">💸 Spesa totale</div><div class="n">${euro(spesa)}</div></div>
     <div class="stat c3"><div class="lbl">💰 Vendite totali</div><div class="n">${euro(vend)}</div></div>
-    <div class="stat ${guad>=0?'pos':'neg'}"><div class="lbl">📈 Guadagno</div><div class="n">${euro(guad)}</div></div>`;
+    <div class="stat ${guad>=0?'pos':'neg'}"><div class="lbl">📈 Guadagno attuale</div><div class="n">${euro(guad)}</div></div>
+    <div class="stat c1"><div class="lbl">🔮 Guadagno atteso</div><div class="n">${euro(atteso)}</div><div class="lbl">se vendi tutte le scorte</div></div>`;
   const grid=document.getElementById('prod-grid');
   if(!stato.frigo.prodotti.length){ grid.innerHTML=`<div class="vuoto-msg">Il frigo è vuoto! 🕳️</div>`; }
   else grid.innerHTML=stato.frigo.prodotti.map(p=>{
@@ -510,7 +512,7 @@ function renderFrigo(){
         <button class="btn btn-ghost btn-sm" onclick="modificaProdotto('${p.id}')">✏️</button>
         <button class="btn btn-ghost btn-sm" onclick="eliminaProdotto('${p.id}')">🗑️</button></div>`:'';
     return `<div class="prod"><h3>${esc(p.nome)}</h3>
-      <div class="prezzi">🛒 Acquisto: <b>${euro(p.acquisto)}</b><br>🏷️ Vendita: <b>${euro(p.vendita)}</b><br>Margine: <span class="margine">${euro(margine)}/pz</span></div>
+      <div class="prezzi">🛒 Acquisto: <b>${euro(p.acquisto)}</b><br>🏷️ Vendita: <b>${euro(p.vendita)}</b><br>Margine: <span class="margine">${euro(margine)}/pz</span><br>🔮 Atteso: <b>${euro(margine*p.stock)}</b> <small style="color:#999">(se vendi i ${p.stock} pz)</small></div>
       <div class="stock ${p.stock<=0?'zero':''}">📦 ${p.stock} pz</div>${azioni}</div>`;
   }).join('');
   const ul=document.getElementById('lista-movimenti');
