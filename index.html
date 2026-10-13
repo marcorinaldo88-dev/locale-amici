@@ -83,6 +83,27 @@ label.campo input,label.campo select{width:100%}
 .stat.c3{background:var(--teal)} .stat.c4{background:var(--viola)} .stat.c5{background:var(--arancio)}
 .stat.pos{background:var(--teal)} .stat.neg{background:var(--coral)}
 
+.cash-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.cash-head select{border:3px solid var(--scuro);border-radius:14px;padding:9px 12px;font:600 15px 'Fredoka',system-ui,sans-serif;background:#fff}
+.cash-chart{display:flex;align-items:flex-end;gap:5px;height:160px;padding:12px 4px 24px;border-bottom:2px solid #e3d9c4;overflow-x:auto}
+.cash-col{flex:1;min-width:18px;height:100%;display:flex;align-items:flex-end;justify-content:center;position:relative}
+.cash-bars{height:100%;width:min(28px,100%);display:flex;align-items:flex-end;justify-content:center;gap:2px}
+.cash-bar{width:45%;min-height:2px;border-radius:5px 5px 0 0;transition:height .25s}
+.cash-bar.in{background:var(--teal)} .cash-bar.out{background:var(--coral)}
+.cash-label{position:absolute;top:calc(100% + 4px);font-size:10px;color:#777;white-space:nowrap}
+.cash-legend{display:flex;gap:14px;justify-content:center;margin:9px 0 15px;font-size:12px;color:#666}
+.cash-legend span{display:flex;align-items:center;gap:5px}.cash-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.cash-mov-list{list-style:none;margin-top:8px}.cash-mov-list li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;background:#faf7f0;margin-bottom:6px;font-size:14px}
+.cash-mov-list li .cash-desc{min-width:0}.cash-mov-list li small{display:block;color:#888}.cash-mov-list .cash-val{font-weight:700;white-space:nowrap}.cash-val.entrata{color:var(--teal)} .cash-val.uscita{color:var(--coral)}
+.cash-comment-form{display:flex;gap:8px;margin-top:18px}.cash-comment-form input{flex:1;width:100%}.cash-comments{list-style:none;margin-top:10px}.cash-comments li{padding:9px 12px;background:#f3ecff;border-radius:12px;margin:6px 0;font-size:14px}.cash-comments small{display:block;color:#777}
+.event-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.event-day{min-height:88px;border:2px solid #e3d9c4;border-radius:13px;padding:6px;background:#fffdf8;cursor:pointer}
+.event-day:hover{border-color:var(--blu)}.event-day.vuoto{background:transparent;border:none;cursor:default}.event-day.oggi{border:3px solid var(--coral)}
+.event-day .num{font-weight:700;color:#888;font-size:13px}.event-pill{display:block;margin-top:4px;padding:3px 5px;border-radius:7px;background:#e8f7f5;color:#166e66;font-size:11px;line-height:1.2;overflow:hidden;text-overflow:ellipsis}
+.event-pill.bolletta{background:#fff0df;color:#975508}.event-pill.altro{background:#eee7ff;color:#6545a0}.event-pill.fatto{text-decoration:line-through;opacity:.6}
+.event-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-radius:13px;background:#faf7f0;margin:7px 0}.event-row.fatto{opacity:.65}.event-row small{display:block;color:#777}
+.solo-accesso{display:none!important}body.utente-connesso .solo-accesso{display:inline-flex!important}
+
 .mese-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0 16px}
 .mese-nav select{border:3px solid var(--scuro);border-radius:14px;padding:10px 14px;font-size:17px;font-weight:600;background:#fff;text-align:center}
 .freccia{border:3px solid var(--scuro);background:var(--giallo);border-radius:50%;width:44px;height:44px;font-size:20px;font-weight:700;box-shadow:0 4px 0 rgba(43,45,66,.2)}
@@ -176,11 +197,11 @@ footer{text-align:center;color:#a08c6b;font-size:13px;padding:20px}
   <button data-vista="quote" onclick="mostra('quote')">💶 Quote</button>
   <button data-vista="frigo" onclick="mostra('frigo')">🧊 Frigo Bar</button>
   <button data-vista="spese" onclick="mostra('spese')">🧾 Spese</button>
-  <button data-vista="pulizie" onclick="mostra('pulizie')">🧹 Pulizie</button>
+  <button data-vista="pulizie" onclick="mostra('pulizie')">📅 Calendario</button>
   <span class="spacer"></span>
   <span id="badge-ruolo">👀 Ospite</span>
   <span id="stato-conn">⏳ Avvio…</span>
-  <button class="mini" id="btn-auth" onclick="toggleAuth()">🔑 Accedi admin</button>
+  <button class="mini" id="btn-auth" onclick="toggleAuth()">🔑 Accedi con Google</button>
   <button class="mini" onclick="esporta()">💾 Backup</button>
   <button class="mini solo-admin" onclick="document.getElementById('file-import').click()">📥 Importa</button>
   <button class="mini solo-admin" onclick="resetTotale()">🧨 Reset</button>
@@ -202,17 +223,24 @@ footer{text-align:center;color:#a08c6b;font-size:13px;padding:20px}
       <div id="cassa-dett" style="font-size:13px;opacity:.95"></div>
     </div>
     <div class="card">
-      <h2 class="titolo-sez">Ciao capo! 👋</h2>
-      <p class="sottotitolo">Ecco come va il locale a colpo d'occhio.</p>
-      <div class="stat-grid" id="home-stats"></div>
+      <div class="cash-head">
+        <div><h2 class="titolo-sez">📊 Flusso di cassa</h2><p class="sottotitolo" style="margin:4px 0 0">Entrate e uscite del locale nel periodo selezionato.</p></div>
+        <div class="riga"><select id="cash-periodo" aria-label="Periodo flusso di cassa" onchange="renderFlussoCassa()"><option value="mese">Questo mese</option><option value="3mesi">Ultimi 3 mesi</option><option value="anno">Quest'anno</option></select><button class="btn btn-primario btn-sm solo-admin" onclick="aggiungiMovimentoCassa()">➕ Registra movimento</button></div>
+      </div>
+      <div class="stat-grid" id="cash-stats"></div>
+      <div id="cash-chart" class="cash-chart" role="img" aria-label="Grafico entrate e uscite"></div>
+      <div class="cash-legend"><span><i class="cash-dot" style="background:var(--teal)"></i>Entrate</span><span><i class="cash-dot" style="background:var(--coral)"></i>Uscite</span></div>
+      <h3 style="margin:8px 0">Movimenti recenti</h3><ul class="cash-mov-list" id="cash-movimenti"></ul>
+      <h3 style="margin:18px 0 6px">💬 Commenti sulla cassa</h3><form class="cash-comment-form solo-admin" onsubmit="event.preventDefault();aggiungiCommentoCassa()"><input id="cash-commento-input" type="text" maxlength="300" placeholder="Aggiungi un commento…"><button class="btn btn-primario btn-sm" type="submit">Invia</button></form><ul class="cash-comments" id="cash-commenti"></ul>
     </div>
+    <div class="card"><div class="riga" style="justify-content:space-between;margin-bottom:8px"><div><h2 class="titolo-sez">📅 Prossimi promemoria</h2><p class="sottotitolo" style="margin:4px 0 0">Quote, bollette e altri appuntamenti del locale.</p></div><button class="btn btn-ghost btn-sm" onclick="mostra('pulizie')">Apri calendario</button></div><div id="home-eventi"></div></div>
     <div class="card">
       <h3 style="margin-bottom:8px">Cosa vuoi gestire?</h3>
       <div class="riga">
         <button class="btn btn-primario" onclick="mostra('quote')">💶 Segna le quote</button>
         <button class="btn btn-teal" onclick="mostra('frigo')">🧊 Apri il frigo bar</button>
         <button class="btn btn-arancio" onclick="mostra('spese')">🧾 Registra una spesa</button>
-        <button class="btn btn-viola" onclick="mostra('pulizie')">🧹 Chi pulisce?</button>
+        <button class="btn btn-viola" onclick="mostra('pulizie')">📅 Apri calendario</button>
       </div>
     </div>
   </section>
@@ -312,16 +340,17 @@ footer{text-align:center;color:#a08c6b;font-size:13px;padding:20px}
   <!-- ===== PULIZIE ===== -->
   <section id="vista-pulizie" class="vista">
     <div class="card">
-      <h2 class="titolo-sez">🧹 Calendario Pulizie</h2>
-      <p class="sottotitolo">Crea i gruppi, genera i turni a rotazione, o clicca un giorno per assegnarlo a mano.</p>
       <div class="riga" style="justify-content:space-between;margin-bottom:8px">
-        <h3>👥 Gruppi</h3>
+        <h2 class="titolo-sez">📅 Calendario del locale</h2>
         <div class="riga solo-admin" style="gap:6px">
           <button class="btn btn-ghost btn-sm" onclick="generaGruppiAuto()">🎲 Crea auto</button>
           <button class="btn btn-ghost btn-sm" onclick="aggiungiGruppo()">➕ Gruppo</button>
           <button class="btn btn-viola btn-sm" onclick="generaTurni()">🔁 Genera turni</button>
+          <button class="btn btn-primario btn-sm solo-accesso" onclick="aggiungiEvento()">➕ Promemoria</button>
         </div>
       </div>
+      <p class="sottotitolo">Turni di pulizia, quote, bollette e altri appuntamenti in un solo calendario. Clicca un giorno per assegnare un turno o inserire un promemoria.</p>
+      <h3 style="margin-bottom:10px">👥 Gruppi pulizie</h3>
       <div id="lista-gruppi"></div>
     </div>
     <div class="card">
@@ -331,6 +360,7 @@ footer{text-align:center;color:#a08c6b;font-size:13px;padding:20px}
         <button class="freccia" onclick="cambiaMeseCal(1)">›</button>
       </div>
       <div class="cal-grid" id="cal-grid"></div>
+      <h3 style="margin:18px 0 8px">📌 Promemoria in arrivo</h3><div id="lista-eventi-prossimi"></div>
     </div>
   </section>
 
@@ -359,7 +389,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, signInAnonymously, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc, getDocs, writeBatch, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-let stato = { membri:[], importoQuota:10, pagamenti:{}, frigo:{prodotti:[],movimenti:[]}, spese:[], pulizie:{}, gruppi:[] };
+let stato = { membri:[], importoQuota:10, pagamenti:{}, frigo:{prodotti:[],movimenti:[]}, spese:[], pulizie:{}, gruppi:[], cassa:[], eventi:[], commentiCassa:[] };
 let db=null, auth=null, pronto=false, listenerAvviati=false, utente=null, ruolo='viewer';
 
 const MESI_IT=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
@@ -374,6 +404,7 @@ const MESI=generaMesi();
 function labelMese(k){ const [y,m]=k.split('-'); return `${MESI_IT[+m-1]} ${y}`; }
 function setStato(txt){ const e=document.getElementById('stato-conn'); if(e) e.textContent=txt; }
 const isAdmin=()=>ruolo==='admin';
+const isSignedIn=()=>!!utente&&!utente.isAnonymous;
 function isAdminUser(u){ return !!u && !u.isAnonymous && ADMIN_EMAILS.map(e=>e.toLowerCase()).includes((u.email||'').toLowerCase()); }
 
 /* ====== MODALE ====== */
@@ -422,28 +453,129 @@ function refresh(){
   else if(v==='quote'){ renderChip(); renderQuote(); renderArretrati(); }
   else if(v==='frigo') renderFrigo();
   else if(v==='spese'){ renderSpese(); renderConguaglio(); }
-  else if(v==='pulizie'){ renderGruppi(); renderCalendario(); }
+  else if(v==='pulizie'){ renderGruppi(); renderCalendario(); renderProssimiEventi(); }
 }
 
 /* ---- HOME + CASSA ---- */
 function meseCorrenteKey(){ const o=new Date(); const k=`${o.getFullYear()}-${String(o.getMonth()+1).padStart(2,'0')}`; return MESI.includes(k)?k:MESI[0]; }
 function guadagnoFrigo(){ const sp=stato.frigo.movimenti.filter(x=>x.tipo==='acquisto').reduce((s,x)=>s+x.totale,0); const ve=stato.frigo.movimenti.filter(x=>x.tipo==='vendita').reduce((s,x)=>s+x.totale,0); return {sp,ve,g:ve-sp}; }
-function quoteRaccolteTot(){ return Object.values(stato.pagamenti).reduce((s,map)=>s+Object.values(map).filter(Boolean).length,0)*stato.importoQuota; }
+function pagamentoInfo(valore){
+  if(valore && typeof valore==='object') return {pagata:valore.pagata!==false, importo:Number(valore.importo??stato.importoQuota), ts:Number(valore.ts)||0, data:valore.data||''};
+  return {pagata:!!valore, importo:stato.importoQuota, ts:0, data:''};
+}
+function quoteRaccolteTot(){ return Object.values(stato.pagamenti).reduce((s,map)=>s+Object.values(map).reduce((tot,v)=>{ const p=pagamentoInfo(v); return tot+(p.pagata?p.importo:0); },0),0); }
 function speseTot(){ return stato.spese.reduce((s,x)=>s+(x.importo||0),0); }
+function saldoMovimentiManuali(){ return (stato.cassa||[]).reduce((s,x)=>s+(x.tipo==='entrata'?1:-1)*(Number(x.importo)||0),0); }
 function renderHome(){
   const mk=meseCorrenteKey(), pag=stato.pagamenti[mk]||{};
-  const versati=stato.membri.filter(m=>pag[m]).length;
+  const versati=stato.membri.filter(m=>pagamentoInfo(pag[m]).pagata).length;
   const {g:guad}=guadagnoFrigo();
-  const totSpese=speseTot(), quoteRacc=quoteRaccolteTot(), cassa=quoteRacc+guad-totSpese, prossimo=prossimoTurno();
+  const totSpese=speseTot(), quoteRacc=quoteRaccolteTot(), cassa=quoteRacc+guad-totSpese+saldoMovimentiManuali(), prossimo=prossimoTurno();
   const cn=document.getElementById('cassa-n'); cn.textContent=euro(cassa);
   document.getElementById('cassa-card').style.background = cassa>=0 ? 'linear-gradient(135deg,var(--teal),var(--blu))' : 'linear-gradient(135deg,var(--coral),var(--arancio))';
-  document.getElementById('cassa-dett').textContent=`Quote ${euro(quoteRacc)} + guadagno frigo ${euro(guad)} − spese ${euro(totSpese)}`;
-  document.getElementById('home-stats').innerHTML=`
-    <div class="stat c1"><div class="lbl">👥 Ragazzi</div><div class="n">${stato.membri.length}</div></div>
-    <div class="stat c2"><div class="lbl">💶 ${labelMese(mk)}</div><div class="n">${versati}/${stato.membri.length}</div><div class="lbl">raccolti ${euro(versati*stato.importoQuota)}</div></div>
-    <div class="stat ${guad>=0?'pos':'neg'}"><div class="lbl">🧊 Guadagno frigo</div><div class="n">${euro(guad)}</div></div>
-    <div class="stat c5"><div class="lbl">🧾 Spese totali</div><div class="n">${euro(totSpese)}</div></div>
-    <div class="stat c4"><div class="lbl">🧹 Prossimo turno</div><div class="n" style="font-size:20px">${prossimo?esc(prossimo.nome):'—'}</div><div class="lbl">${prossimo?prossimo.data:'nessuno in programma'}</div></div>`;
+  const altri=saldoMovimentiManuali();
+  document.getElementById('cassa-dett').textContent=`Quote ${euro(quoteRacc)} + guadagno frigo ${euro(guad)} − spese ${euro(totSpese)} ${altri>=0?'+':'−'} altri movimenti ${euro(Math.abs(altri))}`;
+  renderFlussoCassa();
+}
+function dataMovimento(ts, fallback=''){
+  if(ts){ const d=new Date(ts); if(!isNaN(d)) return d; }
+  if(/^\d{4}-\d{2}-\d{2}$/.test(fallback)) return new Date(fallback+'T12:00:00');
+  return new Date();
+}
+function movimentiFlusso(){
+  const out=[];
+  Object.entries(stato.pagamenti).forEach(([mese,map])=>Object.entries(map||{}).forEach(([nome,val])=>{
+    const p=pagamentoInfo(val); if(!p.pagata) return;
+    const fallback=p.data||`${mese}-01`;
+    out.push({tipo:'entrata',categoria:'Quota',nome:`Quota · ${nome}`,importo:p.importo,data:dataMovimento(p.ts,fallback),ts:p.ts||0,storico:!p.ts});
+  }));
+  stato.frigo.movimenti.forEach(x=>out.push({tipo:x.tipo==='vendita'?'entrata':'uscita',categoria:x.tipo==='vendita'?'Vendita frigo':'Rifornimento frigo',nome:`${x.nome} ×${x.qta}`,importo:Number(x.totale)||0,data:dataMovimento(x.ts),ts:Number(x.ts)||0}));
+  stato.spese.forEach(x=>out.push({tipo:'uscita',categoria:x.tipo==='accessorio'?'Accessorio':'Bolletta',nome:x.nome,importo:Number(x.importo)||0,data:dataMovimento(x.ts),ts:Number(x.ts)||0}));
+  (stato.cassa||[]).forEach(x=>out.push({id:x.id,tipo:x.tipo==='entrata'?'entrata':'uscita',categoria:x.categoria||'Altro',nome:x.nome||'Movimento manuale',importo:Number(x.importo)||0,data:dataMovimento(x.ts,x.data),ts:Number(x.ts)||0,autore:x.autore||''}));
+  return out.sort((a,b)=>a.data-b.data);
+}
+function renderFlussoCassa(){
+  const sel=document.getElementById('cash-periodo'); if(!sel) return;
+  const oggi=new Date(), inizio=new Date(oggi.getFullYear(),oggi.getMonth(),1); let bucket='giorno';
+  if(sel.value==='3mesi'){ inizio.setMonth(inizio.getMonth()-2); bucket='mese'; }
+  if(sel.value==='anno'){ inizio.setMonth(0); bucket='mese'; }
+  const trans=movimentiFlusso().filter(x=>x.data>=inizio&&x.data<=oggi).reverse();
+  const entrate=trans.filter(x=>x.tipo==='entrata').reduce((s,x)=>s+x.importo,0), uscite=trans.filter(x=>x.tipo==='uscita').reduce((s,x)=>s+x.importo,0), saldo=entrate-uscite;
+  document.getElementById('cash-stats').innerHTML=`<div class="stat c3"><div class="lbl">⬆️ Entrate</div><div class="n">${euro(entrate)}</div></div><div class="stat c2"><div class="lbl">⬇️ Uscite</div><div class="n">${euro(uscite)}</div></div><div class="stat ${saldo>=0?'pos':'neg'}"><div class="lbl">⚖️ Saldo del periodo</div><div class="n">${saldo>=0?'+':''}${euro(saldo)}</div></div>`;
+  const buckets=[];
+  if(bucket==='giorno'){
+    for(let d=new Date(inizio);d<=oggi;d.setDate(d.getDate()+1)) buckets.push({key:`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`,label:String(d.getDate()),start:new Date(d.getFullYear(),d.getMonth(),d.getDate()),end:new Date(d.getFullYear(),d.getMonth(),d.getDate()+1)});
+  } else {
+    for(let d=new Date(inizio.getFullYear(),inizio.getMonth(),1);d<=oggi;d.setMonth(d.getMonth()+1)) buckets.push({key:`${d.getFullYear()}-${d.getMonth()}`,label:MESI_IT[d.getMonth()].slice(0,3),start:new Date(d.getFullYear(),d.getMonth(),1),end:new Date(d.getFullYear(),d.getMonth()+1,1)});
+  }
+  const valori=buckets.map(b=>({b,in:trans.filter(x=>x.tipo==='entrata'&&x.data>=b.start&&x.data<b.end).reduce((s,x)=>s+x.importo,0),out:trans.filter(x=>x.tipo==='uscita'&&x.data>=b.start&&x.data<b.end).reduce((s,x)=>s+x.importo,0)}));
+  const max=Math.max(1,...valori.flatMap(x=>[x.in,x.out]));
+  document.getElementById('cash-chart').innerHTML=valori.map(x=>`<div class="cash-col" title="${x.b.label}: entrate ${euro(x.in)}, uscite ${euro(x.out)}"><div class="cash-bars"><i class="cash-bar in" style="height:${x.in?Math.max(3,x.in/max*100):0}%"></i><i class="cash-bar out" style="height:${x.out?Math.max(3,x.out/max*100):0}%"></i></div><small class="cash-label">${x.b.label}</small></div>`).join('');
+  const ul=document.getElementById('cash-movimenti');
+  ul.innerHTML=trans.length?trans.slice(0,8).map(x=>`<li><span class="cash-desc">${x.tipo==='entrata'?'🟢':'🔴'} ${esc(x.nome)} <small>${x.data.toLocaleDateString('it-IT')}${x.storico?' · data non disponibile (raggruppata a inizio mese)':''} · ${esc(x.categoria)}</small></span><span class="riga" style="gap:6px;justify-content:flex-end"><span class="cash-val ${x.tipo}">${x.tipo==='entrata'?'+':'−'}${euro(x.importo)}</span>${isAdmin()&&x.id?`<button class="del" title="Elimina movimento" onclick="eliminaMovimentoCassa('${x.id}')">✕</button>`:''}</span></li>`).join(''):`<div class="vuoto-msg" style="padding:14px">Nessun movimento in questo periodo.</div>`;
+  renderCommentiCassa(); renderProssimiEventi();
+}
+function renderCommentiCassa(){
+  const ul=document.getElementById('cash-commenti'); if(!ul) return;
+  const list=[...(stato.commentiCassa||[])].sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,5);
+  ul.innerHTML=list.length?list.map(x=>`<li>${esc(x.testo||'')}<small>${esc(x.autore||'Admin')} · ${dataMovimento(x.ts).toLocaleString('it-IT')}</small></li>`).join(''):`<li class="vuoto-msg" style="padding:12px">Nessun commento ancora.</li>`;
+}
+async function aggiungiCommentoCassa(){
+  if(!puoiModificare()) return;
+  const input=document.getElementById('cash-commento-input'), testo=input.value.trim(); if(!testo) return;
+  await addDoc(collection(db,'commentiCassa'),{testo,autore:utente?.displayName||utente?.email||'Admin',ts:Date.now(),utenteId:utente?.uid||''});
+  input.value=''; toast('Commento aggiunto 💬');
+}
+function isoDataLocale(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function occorrenzeEventoNelMese(ev,anno,mese){
+  const [ay,am,ad]=String(ev.data||'').split('-').map(Number); if(!ay||!am||!ad) return [];
+  const inizio=new Date(ay,am-1,ad,12), fine=new Date(anno,mese+1,0,12);
+  if(inizio>fine) return [];
+  const completate=Array.isArray(ev.completate)?ev.completate:[];
+  if(ev.ricorrenza!=='mensile') return ay===anno&&am-1===mese?[{ev,data:isoDataLocale(inizio),fatto:completate.includes(isoDataLocale(inizio))}]:[];
+  if(anno<ay||(anno===ay&&mese<am-1)) return [];
+  const giorno=Math.min(ad,new Date(anno,mese+1,0).getDate()), d=new Date(anno,mese,giorno,12), key=isoDataLocale(d);
+  return [{ev,data:key,fatto:completate.includes(key)}];
+}
+function listaOccorrenzePeriodo(daMese,quanti){
+  const risultati=[];
+  for(let i=0;i<quanti;i++){const d=new Date(daMese.getFullYear(),daMese.getMonth()+i,1);for(const ev of stato.eventi||[]) risultati.push(...occorrenzeEventoNelMese(ev,d.getFullYear(),d.getMonth()));}
+  return risultati.sort((a,b)=>a.data.localeCompare(b.data));
+}
+function renderProssimiEventi(){
+  const boxes=['home-eventi','lista-eventi-prossimi'].map(id=>document.getElementById(id)).filter(Boolean); if(!boxes.length)return;
+  const oggi=oggiISO(), mese=new Date(); mese.setMonth(mese.getMonth()-1);
+  const occ=listaOccorrenzePeriodo(mese,5).filter(x=>!x.fatto).filter(x=>x.data>=oggi||x.data.slice(0,7)===oggi.slice(0,7)).slice(0,8);
+  const html=occ.length?occ.map(x=>`<div class="event-row"><span>${x.ev.tipo==='quota'?'💶':x.ev.tipo==='bolletta'?'💡':'📌'} <b>${esc(x.ev.titolo)}</b><small>${new Date(x.data+'T12:00:00').toLocaleDateString('it-IT')}${x.ev.importo?` · ${euro(x.ev.importo)}`:''}${x.ev.ricorrenza==='mensile'?' · ogni mese':''}${x.data<oggi?' · SCADUTO':''}</small></span>${isSignedIn()?`<span class="riga" style="gap:5px;justify-content:flex-end"><button class="btn btn-teal btn-sm" onclick="completaEvento('${x.ev.id}','${x.data}')">Segna fatto ✓</button>${isAdmin()||x.ev.autoreId===utente?.uid?`<button class="btn btn-ghost btn-sm" title="Elimina promemoria" onclick="eliminaEvento('${x.ev.id}')">🗑️</button>`:''}</span>`:''}</div>`).join(''):`<div class="vuoto-msg" style="padding:14px">Nessun promemoria in arrivo. Aggiungine uno dal calendario 📅</div>`;
+  boxes.forEach(b=>b.innerHTML=html);
+}
+async function aggiungiEvento(dataDefault=oggiISO()){
+  if(!puoiGestireEventi()) return;
+  const r=await modalInput('Nuovo evento o promemoria',[
+    {name:'tipo',label:'Tipo',type:'select',value:'quota',opzioni:[{v:'quota',label:'💶 Versamento quota'},{v:'bolletta',label:'💡 Pagamento bolletta'},{v:'altro',label:'📌 Altro evento'}]},
+    {name:'titolo',label:'Descrizione',type:'text',value:'',placeholder:'Es. Quota di novembre / Bolletta luce'},
+    {name:'importo',label:'Importo previsto (€), facoltativo',type:'number',value:'',min:0,step:0.01},
+    {name:'data',label:'Data di scadenza',type:'date',value:dataDefault},
+    {name:'ricorrenza',label:'Ripeti',type:'select',value:'mensile',opzioni:[{v:'mensile',label:'Ogni mese'},{v:'nessuna',label:'Solo questa volta'}]}
+  ],{okLabel:'Salva promemoria'});
+  if(!r)return;
+  if(!r.titolo||!r.data){toast('Inserisci una descrizione e una data 📅');return;}
+  const importo=r.importo===''?0:Number(r.importo); if(!Number.isFinite(importo)||importo<0){toast('Importo non valido 💶');return;}
+  try{ await addDoc(collection(db,'eventi'),{tipo:r.tipo,titolo:r.titolo,importo,data:r.data,ricorrenza:r.ricorrenza,completate:[],ts:Date.now(),autore:utente?.displayName||utente?.email||'',autoreId:utente?.uid||''}); }
+  catch(e){ console.error(e); toast('Salvataggio bloccato da Firebase: controlla le regole della raccolta eventi 🔒'); return; }
+  toast('Promemoria salvato 📅');
+}
+async function completaEvento(id,data){
+  if(!puoiGestireEventi())return;
+  const ev=stato.eventi.find(x=>x.id===id); if(!ev)return;
+  const completate=Array.isArray(ev.completate)?ev.completate:[];
+  try{await updateDoc(doc(db,'eventi',id),{completate:[...new Set([...completate,data])]});toast('Promemoria completato ✓');}catch(e){console.error(e);toast('Aggiornamento bloccato dalle regole Firebase 🔒');}
+}
+async function eliminaEvento(id){
+  const ev=stato.eventi.find(x=>x.id===id);
+  if(!isAdmin()&&(!isSignedIn()||ev?.autoreId!==utente?.uid)){toast('Puoi eliminare solo i tuoi promemoria 👀');return;}
+  const r=await modalInput('Eliminare questo promemoria?',[],{okLabel:'Sì, elimina 🗑️'}); if(r===null)return;
+  try{await deleteDoc(doc(db,'eventi',id));toast('Promemoria eliminato');}catch(e){console.error(e);toast('Eliminazione bloccata dalle regole Firebase 🔒');}
 }
 function prossimoTurno(){
   const oggi=new Date(); oggi.setHours(0,0,0,0);
@@ -466,13 +598,14 @@ function renderQuote(){
   meseSel=document.getElementById('select-mese').value;
   const pag=stato.pagamenti[meseSel]||{}, lista=document.getElementById('lista-quote');
   if(!stato.membri.length){ lista.innerHTML=`<div class="vuoto-msg">Nessun ragazzo da mostrare</div>`; document.getElementById('riepilogo-mese').innerHTML=''; return; }
-  const versati=stato.membri.filter(m=>pag[m]).length, tot=stato.membri.length, perc=tot?Math.round(versati/tot*100):0;
+  const versati=stato.membri.filter(m=>pagamentoInfo(pag[m]).pagata).length, tot=stato.membri.length, perc=tot?Math.round(versati/tot*100):0;
+  const raccolto=stato.membri.reduce((s,m)=>{const p=pagamentoInfo(pag[m]);return s+(p.pagata?p.importo:0);},0);
   document.getElementById('riepilogo-mese').innerHTML=`
     <div class="riga" style="justify-content:space-between"><b>${versati} su ${tot} hanno versato</b>
-    <b style="color:var(--teal)">Raccolto: ${euro(versati*stato.importoQuota)} / ${euro(tot*stato.importoQuota)}</b></div>
+    <b style="color:var(--teal)">Raccolto: ${euro(raccolto)} / ${euro(tot*stato.importoQuota)}</b></div>
     <div class="progress"><div style="width:${perc}%"></div></div>`;
   lista.innerHTML=stato.membri.map(m=>{
-    const ok=!!pag[m];
+    const ok=pagamentoInfo(pag[m]).pagata;
     const ctrl=isAdmin()
       ? `<button class="toggle-quota ${ok?'si':'no'}" onclick="toggleQuota('${esc(m)}')">${ok?'Versata':'Non versata'}</button>`
       : `<span class="toggle-quota ${ok?'si':'no'}">${ok?'Versata':'Non versata'}</span>`;
@@ -484,7 +617,7 @@ function renderArretrati(){
   if(!stato.membri.length){ box.innerHTML=`<div class="vuoto-msg" style="padding:14px">Nessun ragazzo.</div>`; return; }
   const idx=MESI.indexOf(meseCorrenteKey());
   const mesiDovuti=MESI.slice(0, idx+1);
-  const arr=stato.membri.map(m=>{ let mancanti=0; mesiDovuti.forEach(k=>{ if(!(stato.pagamenti[k]||{})[m]) mancanti++; }); return {nome:m, mancanti, dovuto:mancanti*stato.importoQuota}; })
+  const arr=stato.membri.map(m=>{ let mancanti=0; mesiDovuti.forEach(k=>{ if(!pagamentoInfo((stato.pagamenti[k]||{})[m]).pagata) mancanti++; }); return {nome:m, mancanti, dovuto:mancanti*stato.importoQuota}; })
     .filter(x=>x.mancanti>0).sort((a,b)=>b.dovuto-a.dovuto);
   if(!arr.length){ box.innerHTML=`<div class="vuoto-msg" style="padding:14px">Tutti in regola! 🎉🍻</div>`; return; }
   box.innerHTML=arr.map(x=>`<div class="membro-riga allarme">
@@ -497,11 +630,13 @@ function renderArretrati(){
 function renderFrigo(){
   const {sp:spesa,ve:vend,g:guad}=guadagnoFrigo();
   const atteso=stato.frigo.prodotti.reduce((s,p)=>s+(p.vendita-p.acquisto)*p.stock,0);
+  const incasso=stato.frigo.prodotti.reduce((s,p)=>s+p.vendita*p.stock,0);
   document.getElementById('frigo-stats').innerHTML=`
     <div class="stat c2"><div class="lbl">💸 Spesa totale</div><div class="n">${euro(spesa)}</div></div>
     <div class="stat c3"><div class="lbl">💰 Vendite totali</div><div class="n">${euro(vend)}</div></div>
     <div class="stat ${guad>=0?'pos':'neg'}"><div class="lbl">📈 Guadagno attuale</div><div class="n">${euro(guad)}</div></div>
-    <div class="stat c1"><div class="lbl">🔮 Guadagno atteso</div><div class="n">${euro(atteso)}</div><div class="lbl">se vendi tutte le scorte</div></div>`;
+    <div class="stat c4"><div class="lbl">🧾 Incasso atteso</div><div class="n">${euro(incasso)}</div><div class="lbl">vendendo tutte le scorte</div></div>
+    <div class="stat c1"><div class="lbl">🔮 Guadagno atteso</div><div class="n">${euro(atteso)}</div><div class="lbl">incasso − spesa delle scorte</div></div>`;
   const grid=document.getElementById('prod-grid');
   if(!stato.frigo.prodotti.length){ grid.innerHTML=`<div class="vuoto-msg">Il frigo è vuoto! 🕳️</div>`; }
   else grid.innerHTML=stato.frigo.prodotti.map(p=>{
@@ -512,7 +647,7 @@ function renderFrigo(){
         <button class="btn btn-ghost btn-sm" onclick="modificaProdotto('${p.id}')">✏️</button>
         <button class="btn btn-ghost btn-sm" onclick="eliminaProdotto('${p.id}')">🗑️</button></div>`:'';
     return `<div class="prod"><h3>${esc(p.nome)}</h3>
-      <div class="prezzi">🛒 Acquisto: <b>${euro(p.acquisto)}</b><br>🏷️ Vendita: <b>${euro(p.vendita)}</b><br>Margine: <span class="margine">${euro(margine)}/pz</span><br>🔮 Atteso: <b>${euro(margine*p.stock)}</b> <small style="color:#999">(se vendi i ${p.stock} pz)</small></div>
+      <div class="prezzi">🛒 Acquisto: <b>${euro(p.acquisto)}</b><br>🏷️ Vendita: <b>${euro(p.vendita)}</b><br>Margine: <span class="margine">${euro(margine)}/pz</span><br>💰 Incasso atteso: <b>${euro(p.vendita*p.stock)}</b><br>🔮 Guadagno atteso: <b>${euro(margine*p.stock)}</b> <small style="color:#999">(${p.stock} pz)</small></div>
       <div class="stock ${p.stock<=0?'zero':''}">📦 ${p.stock} pz</div>${azioni}</div>`;
   }).join('');
   const ul=document.getElementById('lista-movimenti');
@@ -582,12 +717,14 @@ function renderCalendario(){
   let html=dow.map(d=>`<div class="cal-dow">${d}</div>`).join('');
   const offset=(new Date(calAnno,calMese,1).getDay()+6)%7, giorni=new Date(calAnno,calMese+1,0).getDate();
   const oggiStamp=oggiISO();
+  const eventiMese=listaOccorrenzePeriodo(new Date(calAnno,calMese,1),1);
   for(let i=0;i<offset;i++) html+=`<div class="cal-day vuoto"></div>`;
   for(let g=1;g<=giorni;g++){
     const key=`${calAnno}-${String(calMese+1).padStart(2,'0')}-${String(g).padStart(2,'0')}`;
     const turno=stato.pulizie[key];
-    const click=isAdmin()?`onclick="assegnaTurno('${key}','${g} ${MESI_IT[calMese]}')"`:'';
-    html+=`<div class="cal-day ${turno?'assegnato':''} ${key===oggiStamp?'oggi':''}" ${click}><span class="num">${g}</span>${turno?`<span class="turno">${esc(turno)}</span>`:''}</div>`;
+    const eventi=eventiMese.filter(x=>x.data===key);
+    const click=(isAdmin()||isSignedIn())?`onclick="gestisciGiornoCalendario('${key}','${g} ${MESI_IT[calMese]}')"`:'';
+    html+=`<div class="cal-day ${turno?'assegnato':''} ${key===oggiStamp?'oggi':''}" ${click}><span class="num">${g}</span>${turno?`<span class="turno">${esc(turno)}</span>`:''}${eventi.map(x=>`<span class="event-pill ${x.ev.tipo==='bolletta'?'bolletta':x.ev.tipo==='altro'?'altro':''} ${x.fatto?'fatto':''}" title="${esc(x.ev.titolo)}${x.fatto?' · completato':''}">${x.ev.tipo==='quota'?'💶':x.ev.tipo==='bolletta'?'💡':'📌'} ${esc(x.ev.titolo)}</span>`).join('')}</div>`;
   }
   grid.innerHTML=html;
 }
@@ -606,6 +743,11 @@ function puoiModificare(){
   if(!isAdmin()){ toast('Solo gli admin possono modificare 👀 Accedi con Google.'); return false; }
   return true;
 }
+function puoiGestireEventi(){
+  if(!pronto){toast('Un attimo, mi sto collegando… ⏳');return false;}
+  if(!isSignedIn()){toast('Accedi con Google per aggiungere o completare promemoria 🔑');return false;}
+  return true;
+}
 async function aggiungiMembro(){
   if(!puoiModificare()) return;
   const inp=document.getElementById('nuovo-membro'), nome=inp.value.trim();
@@ -614,7 +756,13 @@ async function aggiungiMembro(){
 }
 async function rimuoviMembro(nome){ if(!puoiModificare()) return; await setDoc(doc(db,'meta','membri'), {lista:stato.membri.filter(m=>m!==nome)}); }
 async function salvaImporto(){ if(!puoiModificare()) return; const v=parseFloat(document.getElementById('importo-quota').value)||0; await setDoc(doc(db,'meta','config'), {importoQuota:v}, {merge:true}); }
-async function toggleQuota(m){ if(!puoiModificare()) return; const cur=(stato.pagamenti[meseSel]||{})[m]||false; await setDoc(doc(db,'pagamenti',meseSel), {[m]:!cur}, {merge:true}); if(!cur) toast(m+' ha pagato! 💸'); }
+async function toggleQuota(m){
+  if(!puoiModificare()) return;
+  const cur=pagamentoInfo((stato.pagamenti[meseSel]||{})[m]);
+  const nuovo=cur.pagata?false:{pagata:true,importo:stato.importoQuota,ts:Date.now(),data:oggiISO()};
+  await setDoc(doc(db,'pagamenti',meseSel), {[m]:nuovo}, {merge:true});
+  if(!cur.pagata) toast(m+' ha pagato! 💸');
+}
 async function aggiungiProdotto(){
   if(!puoiModificare()) return;
   const nome=document.getElementById('p-nome').value.trim();
@@ -682,6 +830,12 @@ async function assegnaTurno(key,label){
   if(r===null) return;
   if(r.__rimuovi||!r.nome){ await deleteDoc(doc(db,'pulizie',key)); toast('Turno liberato 🧽'); }
   else { await setDoc(doc(db,'pulizie',key), {nome:r.nome}); toast(`Turno assegnato 🧹`); }
+}
+async function gestisciGiornoCalendario(key,label){
+  if(!isAdmin()){ if(isSignedIn()) await aggiungiEvento(key); else toast('Accedi con Google per aggiungere promemoria 🔑'); return; }
+  const r=await modalInput(`Aggiungi al calendario — ${label}`,[{name:'azione',label:'Cosa vuoi aggiungere?',type:'select',value:'pulizie',opzioni:[{v:'pulizie',label:'🧹 Assegna o modifica turno pulizie'},{v:'evento',label:'📅 Aggiungi promemoria'}]}],{okLabel:'Continua'});
+  if(!r)return;
+  if(r.azione==='evento') await aggiungiEvento(key); else await assegnaTurno(key,label);
 }
 
 /* ---- GRUPPI: azioni ---- */
@@ -760,6 +914,30 @@ async function eliminaSpesa(id){
   if(r===null) return; await deleteDoc(doc(db,'spese',id)); toast('Spesa eliminata');
 }
 
+async function aggiungiMovimentoCassa(){
+  if(!puoiModificare()) return;
+  const r=await modalInput('Registra movimento di cassa', [
+    {name:'tipo',label:'Tipo movimento',type:'select',value:'uscita',opzioni:[{v:'entrata',label:'⬆️ Entrata'},{v:'uscita',label:'⬇️ Uscita'}]},
+    {name:'categoria',label:'Categoria',type:'select',value:'Altro',opzioni:[{v:'Altro',label:'Altro'},{v:'Contributo',label:'Contributo'},{v:'Rimborso',label:'Rimborso'},{v:'Manutenzione',label:'Manutenzione'}]},
+    {name:'nome',label:'Descrizione',type:'text',value:'',placeholder:'Es. contributo extra'},
+    {name:'importo',label:'Importo (€)',type:'number',value:'',min:0.01,step:0.01},
+    {name:'data',label:'Data',type:'date',value:oggiISO()}
+  ], {okLabel:'Registra'});
+  if(!r) return;
+  const importo=Number(r.importo);
+  if(!r.nome||!Number.isFinite(importo)||importo<=0||!r.data){ toast('Controlla descrizione, importo e data 🙃'); return; }
+  const data=new Date(r.data+'T12:00:00');
+  const nomeUtente=utente?.displayName||utente?.email||'';
+  await addDoc(collection(db,'cassa'), {tipo:r.tipo==='entrata'?'entrata':'uscita',categoria:r.categoria,nome:r.nome,importo,data:r.data,ts:data.getTime(),autore:nomeUtente,utenteId:utente?.uid||''});
+  toast('Movimento registrato 💶');
+}
+async function eliminaMovimentoCassa(id){
+  if(!puoiModificare()) return;
+  const r=await modalInput('Eliminare questo movimento?', [], {okLabel:'Sì, elimina 🗑️'});
+  if(r===null) return;
+  await deleteDoc(doc(db,'cassa',id)); toast('Movimento eliminato');
+}
+
 /* ====== BACKUP / IMPORT / RESET ====== */
 function esporta(){
   const blob=new Blob([JSON.stringify(stato,null,2)],{type:'application/json'});
@@ -782,6 +960,9 @@ function importa(ev){
       for(const p of (d.frigo?.prodotti||[])) await addDoc(collection(db,'prodotti'),{nome:p.nome,acquisto:p.acquisto,vendita:p.vendita,stock:p.stock});
       for(const m of (d.frigo?.movimenti||[])) await addDoc(collection(db,'movimenti'),{tipo:m.tipo,prodottoId:m.prodottoId||'',nome:m.nome,qta:m.qta,totale:m.totale,data:m.data||'',ts:m.ts||Date.now()});
       for(const s of (d.spese||[])) await addDoc(collection(db,'spese'),{tipo:s.tipo,nome:s.nome,importo:s.importo,pagatoDa:s.pagatoDa||'',data:s.data||'',ts:s.ts||Date.now()});
+      for(const m of (d.cassa||[])) await addDoc(collection(db,'cassa'),{tipo:m.tipo==='entrata'?'entrata':'uscita',categoria:m.categoria||'Altro',nome:m.nome||'Movimento manuale',importo:Number(m.importo)||0,data:m.data||oggiISO(),ts:m.ts||Date.now(),autore:m.autore||'',utenteId:m.utenteId||''});
+      for(const e of (d.eventi||[])) await addDoc(collection(db,'eventi'),{tipo:e.tipo||'altro',titolo:e.titolo||'Evento',importo:Number(e.importo)||0,data:e.data||oggiISO(),ricorrenza:e.ricorrenza==='mensile'?'mensile':'nessuna',completate:Array.isArray(e.completate)?e.completate:[],ts:e.ts||Date.now(),autore:e.autore||'',autoreId:e.autoreId||''});
+      for(const c of (d.commentiCassa||[])) await addDoc(collection(db,'commentiCassa'),{testo:c.testo||'',autore:c.autore||'',ts:c.ts||Date.now(),utenteId:c.utenteId||''});
       toast('Dati importati! 📥✅');
     }catch(e){ console.error(e); toast('File non valido 😵'); }
     ev.target.value='';
@@ -792,7 +973,7 @@ async function resetTotale(){
   if(!puoiModificare()) return;
   const r=await modalInput('Azzerare TUTTO per tutti?', [], {okLabel:'Sì, cancella tutto 🧨'});
   if(r===null) return;
-  for(const c of ['pagamenti','prodotti','movimenti','spese','pulizie']){
+  for(const c of ['pagamenti','prodotti','movimenti','spese','pulizie','cassa','eventi','commentiCassa']){
     const snap=await getDocs(collection(db,c)); const batch=writeBatch(db); snap.forEach(dc=>batch.delete(dc.ref)); await batch.commit();
   }
   await deleteDoc(doc(db,'meta','membri')).catch(()=>{});
@@ -816,13 +997,14 @@ function entra(){ document.getElementById('welcome').classList.add('via'); lanci
 function applicaRuolo(){
   const admin=isAdmin();
   document.body.classList.toggle('sola-lettura', !admin);
+  document.body.classList.toggle('utente-connesso', isSignedIn());
   const b=document.getElementById('btn-auth'), bad=document.getElementById('badge-ruolo');
   if(utente && !utente.isAnonymous){
     const nome=(utente.displayName||utente.email||'').split(' ')[0];
     b.textContent='🚪 Esci';
-    bad.textContent = admin ? `👑 Admin · ${esc(nome)}` : '👀 Sola lettura';
+    bad.textContent = admin ? `👑 Admin · ${esc(nome)}` : '👀 Lettura + eventi';
     bad.style.background = admin ? 'var(--teal)' : '#eee'; bad.style.color = admin ? '#fff' : '#777';
-  } else { b.textContent='🔑 Accedi admin'; bad.textContent='👀 Ospite'; bad.style.background='#eee'; bad.style.color='#777'; }
+  } else { b.textContent='🔑 Accedi con Google'; bad.textContent='👀 Ospite'; bad.style.background='#eee'; bad.style.color='#777'; }
   refresh();
 }
 async function toggleAuth(){
@@ -840,6 +1022,9 @@ function avviaListener(){
   onSnapshot(collection(db,'prodotti'), s=>{ stato.frigo.prodotti=s.docs.map(d=>({id:d.id,...d.data()})); refresh(); }, errOff);
   onSnapshot(query(collection(db,'movimenti'), orderBy('ts')), s=>{ stato.frigo.movimenti=s.docs.map(d=>({id:d.id,...d.data()})); refresh(); }, errOff);
   onSnapshot(query(collection(db,'spese'), orderBy('ts')), s=>{ stato.spese=s.docs.map(d=>({id:d.id,...d.data()})); refresh(); }, errOff);
+  onSnapshot(query(collection(db,'cassa'), orderBy('ts')), s=>{ stato.cassa=s.docs.map(d=>({id:d.id,...d.data()})); refresh(); }, errOff);
+  onSnapshot(query(collection(db,'commentiCassa'), orderBy('ts')), s=>{ stato.commentiCassa=s.docs.map(d=>({id:d.id,...d.data()})); refresh(); }, errOff);
+  onSnapshot(collection(db,'eventi'), s=>{ stato.eventi=s.docs.map(d=>({id:d.id,...d.data()})); refresh(); }, errOff);
   onSnapshot(collection(db,'pulizie'), s=>{ const o={}; s.forEach(d=>o[d.id]=d.data()?.nome); stato.pulizie=o; refresh(); }, errOff);
 }
 function errOff(e){ console.error(e); setStato('🔴 Errore'); }
@@ -863,7 +1048,8 @@ Object.assign(window, {
   aggiungiProdotto, vendi, rifornisci, modificaProdotto, eliminaProdotto, aggiungiMovimento, eliminaMovimento,
   aggiungiSpesa, eliminaSpesa, aggiornaCampoPagatore,
   cambiaMeseCal, assegnaTurno, generaGruppiAuto, aggiungiGruppo, modificaGruppo, eliminaGruppo, generaTurni,
-  esporta, importa, resetTotale, toggleAuth
+  esporta, importa, resetTotale, toggleAuth, renderFlussoCassa, aggiungiMovimentoCassa, eliminaMovimentoCassa,
+  aggiungiCommentoCassa, aggiungiEvento, completaEvento, eliminaEvento, gestisciGiornoCalendario
 });
 
 popolaSelectMese(); initCal(); renderHome(); lanciaCoriandoli(); avvia();
