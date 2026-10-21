@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏠 Il Locale — Gestione con gli amici</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --coral:#ff5d73; --giallo:#ffd166; --teal:#2ec4b6; --viola:#9b5de5;
+  --blu:#4d96ff; --arancio:#ff8c42; --scuro:#2b2d42; --crema:#fff7e6;
+  --ombra:0 6px 0 rgba(43,45,66,.12); --ombra-soft:0 10px 30px rgba(43,45,66,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Fredoka',system-ui,sans-serif;color:var(--scuro);background:linear-gradient(135deg,#fff7e6 0%,#ffe9ec 45%,#e8fbf8 100%);background-attachment:fixed;min-height:100vh;line-height:1.4}
+h1,h2,h3{font-weight:700;line-height:1.15}
+button{font-family:inherit;cursor:pointer}
+input,select{font-family:inherit}
+
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:9999}
+#welcome{position:fixed;inset:0;z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;background:linear-gradient(135deg,var(--viola),var(--coral) 55%,var(--arancio));transition:opacity .5s ease, visibility .5s}
+#welcome.via{opacity:0;visibility:hidden}
+#welcome .emoji-big{font-size:clamp(50px,12vw,110px);animation:ballo 1.2s ease-in-out infinite}
+#welcome h1{color:#fff;font-size:clamp(34px,8vw,80px);text-shadow:0 4px 0 rgba(0,0,0,.15);margin:.1em 0}
+#welcome p{color:#fff;font-size:clamp(16px,3vw,24px);opacity:.95;max-width:560px;margin-bottom:28px}
+#welcome button{background:#fff;color:var(--coral);border:none;font-size:clamp(18px,3vw,24px);font-weight:700;padding:16px 34px;border-radius:50px;box-shadow:0 8px 0 rgba(0,0,0,.18);transition:transform .1s}
+#welcome button:active{transform:translateY(4px);box-shadow:0 4px 0 rgba(0,0,0,.18)}
+@keyframes ballo{0%,100%{transform:rotate(-8deg) scale(1)}50%{transform:rotate(8deg) scale(1.08)}}
+
+header{text-align:center;padding:26px 16px 8px}
+header .logo{font-size:40px}
+header h1{font-size:clamp(26px,5vw,40px)}
+header .sub{color:#8a6d3b;opacity:.8;margin-top:2px;font-size:15px}
+nav{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;padding:14px;margin-bottom:8px}
+nav button{border:3px solid var(--scuro);background:#fff;color:var(--scuro);padding:10px 18px;border-radius:40px;font-size:16px;font-weight:600;box-shadow:var(--ombra);transition:transform .12s,background .15s}
+nav button:hover{transform:translateY(-2px) rotate(-1.5deg)}
+nav button.attivo{color:#fff}
+nav button[data-vista="home"].attivo{background:var(--blu)}
+nav button[data-vista="quote"].attivo{background:var(--coral)}
+nav button[data-vista="frigo"].attivo{background:var(--teal)}
+nav button[data-vista="spese"].attivo{background:var(--arancio)}
+nav button[data-vista="pulizie"].attivo{background:var(--viola)}
+nav .spacer{flex-basis:100%;height:0}
+nav .mini{padding:8px 14px;font-size:14px;border-width:2px}
+#stato-conn,#badge-ruolo{border:2px solid var(--scuro);border-radius:40px;padding:7px 13px;font-size:13px;font-weight:600;background:#fff;white-space:nowrap}
+
+main{max-width:960px;margin:0 auto;padding:10px 16px 60px}
+.vista{display:none;animation:entra .35s ease}
+.vista.attiva{display:block}
+@keyframes entra{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.sola-lettura .solo-admin{display:none!important}
+
+.card{background:#fff;border:3px solid var(--scuro);border-radius:22px;box-shadow:var(--ombra);padding:20px;margin-bottom:18px}
+.titolo-sez{font-size:clamp(22px,4vw,30px);margin-bottom:4px}
+.sottotitolo{color:#777;margin-bottom:16px;font-size:15px}
+#cassa-card{text-align:center;background:linear-gradient(135deg,var(--teal),var(--blu));color:#fff}
+#cassa-n{font-size:clamp(34px,7vw,46px);font-weight:700;margin:4px 0}
+
+.btn{border:3px solid var(--scuro);border-radius:40px;padding:9px 16px;font-weight:600;font-size:15px;background:#fff;box-shadow:0 4px 0 rgba(43,45,66,.18);transition:transform .1s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(43,45,66,.18)}
+.btn-primario{background:var(--coral);color:#fff}
+.btn-teal{background:var(--teal);color:#fff}
+.btn-viola{background:var(--viola);color:#fff}
+.btn-arancio{background:var(--arancio);color:#fff}
+.btn-ghost{background:#f2f2f2}
+.btn-sm{padding:6px 12px;font-size:13px;border-width:2px;box-shadow:0 3px 0 rgba(43,45,66,.15)}
+
+.riga{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input[type=text],input[type=number],input[type=password],input[type=date]{border:3px solid var(--scuro);border-radius:14px;padding:10px 14px;font-size:15px;min-width:0}
+.riga select,#modal-body select{border:3px solid var(--scuro);border-radius:14px;padding:10px 14px;font-size:15px;font-weight:600;background:#fff}
+input:focus,select:focus{outline:3px solid var(--giallo)}
+label.campo{display:block;margin:12px 0}
+label.campo span{display:block;font-weight:600;margin-bottom:5px;font-size:14px}
+label.campo input,label.campo select{width:100%}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.stat{border-radius:20px;padding:18px;color:#fff;text-align:center;box-shadow:var(--ombra)}
+.stat .n{font-size:30px;font-weight:700;margin-top:4px}
+.stat .lbl{font-size:14px;opacity:.95}
+.stat.c1{background:var(--blu)} .stat.c2{background:var(--coral)}
+.stat.c3{background:var(--teal)} .stat.c4{background:var(--viola)} .stat.c5{background:var(--arancio)}
+.stat.pos{background:var(--teal)} .stat.neg{background:var(--coral)}
+
+.mese-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0 16px}
+.mese-nav select{border:3px solid var(--scuro);border-radius:14px;padding:10px 14px;font-size:17px;font-weight:600;background:#fff;text-align:center}
+.freccia{border:3px solid var(--scuro);background:var(--giallo);border-radius:50%;width:44px;height:44px;font-size:20px;font-weight:700;box-shadow:0 4px 0 rgba(43,45,66,.2)}
+.freccia:active{transform:translateY(3px)}
+.membro-riga{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:16px;background:#faf7f0;border:2px dashed #e3d9c4;margin-bottom:10px}
+.membro-riga.pagato{background:#e7fbf5;border-color:var(--teal);border-style:solid}
+.membro-riga.allarme{background:#ffe3e7;border-color:var(--coral);border-style:solid}
+.membro-nome{font-weight:600;font-size:16px}
+.toggle-quota{border:3px solid var(--scuro);border-radius:40px;padding:8px 16px;font-weight:700;font-size:14px;background:#fff;white-space:nowrap;display:inline-block}
+.toggle-quota.si{background:var(--teal);color:#fff}
+.toggle-quota.no{background:#ffe3e7;color:var(--coral)}
+.progress{height:16px;background:#eee;border-radius:40px;overflow:hidden;border:2px solid var(--scuro);margin-top:6px}
+.progress>div{height:100%;background:linear-gradient(90deg,var(--teal),var(--giallo));transition:width .4s}
+.chip{display:inline-flex;align-items:center;gap:6px;background:#f2eee4;border:2px solid #ddd3bd;border-radius:40px;padding:5px 10px 5px 12px;font-size:14px;margin:4px 4px 0 0}
+.chip button{border:none;background:var(--coral);color:#fff;border-radius:50%;width:20px;height:20px;font-size:12px;line-height:1}
+
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.prod{border:3px solid var(--scuro);border-radius:20px;padding:16px;background:#fff;box-shadow:var(--ombra);transition:transform .12s}
+.prod:hover{transform:translateY(-3px) rotate(-.6deg)}
+.prod h3{font-size:19px;margin-bottom:8px}
+.prod .prezzi{font-size:14px;color:#555;line-height:1.7}
+.prod .margine{color:var(--teal);font-weight:700}
+.prod .stock{display:inline-block;background:var(--giallo);border:2px solid var(--scuro);border-radius:40px;padding:2px 12px;font-weight:700;font-size:14px;margin:8px 0}
+.prod .stock.zero{background:#ffd0d6;color:var(--coral)}
+.prod-azioni{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+
+.movimenti{list-style:none;margin-top:8px}
+.movimenti li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;background:#faf7f0;margin-bottom:6px;font-size:14px}
+.movimenti li.vendita{background:#e7fbf5}
+.movimenti li.bolletta{background:#fff3e6}
+.movimenti li.accessorio{background:#f3ecff}
+.movimenti li .val{font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.movimenti li .del{border:2px solid var(--scuro);background:#fff;border-radius:50%;width:26px;height:26px;font-size:12px;line-height:1;padding:0}
+.tag{display:inline-block;border-radius:40px;padding:1px 8px;font-size:11px;font-weight:700;margin-left:4px;border:1px solid rgba(0,0,0,.1)}
+.tag.bol{background:#ffe3c4;color:#9a5a12}
+.tag.acc{background:#e8ddff;color:#5f3b9b}
+.pos{color:var(--teal);font-weight:700}
+.neg{color:var(--coral);font-weight:700}
+
+.cal-head{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px}
+.cal-head h3{font-size:22px;min-width:200px;text-align:center}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-dow{text-align:center;font-weight:700;font-size:13px;color:#8a6d3b;padding-bottom:4px}
+.cal-day{min-height:72px;border:2px solid #e3d9c4;border-radius:14px;padding:6px;background:#fffdf8;transition:transform .1s,border-color .15s;display:flex;flex-direction:column}
+.cal-day[onclick]{cursor:pointer}
+.cal-day[onclick]:hover{transform:scale(1.03);border-color:var(--viola)}
+.cal-day.vuoto{background:transparent;border:none}
+.cal-day.oggi{border-color:var(--coral);border-width:3px}
+.cal-day .num{font-size:14px;font-weight:600;color:#999}
+.cal-day.assegnato{background:#f3ecff;border-color:var(--viola);border-style:solid}
+.cal-day .turno{margin-top:auto;font-size:13px;font-weight:600;color:var(--viola);word-break:break-word}
+.cal-day .turno::before{content:"🧹 "}
+.cal-day .prom{font-size:12px;font-weight:600;color:var(--coral);word-break:break-word;margin-top:2px}
+.cal-day.ha-prom{border-color:var(--coral)}
+.prom-riga{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:2px solid #e3d9c4;border-radius:14px;margin-bottom:8px;background:#fffdf8}
+.prom-riga .gg{font-weight:700;color:var(--coral);min-width:62px}
+.lotto-ed{border:2px solid #e3d9c4;border-radius:16px;padding:12px;margin-bottom:10px;background:#fffdf8}
+.lotto-ed.mod{border-color:var(--teal);background:#f0fcf9}
+.lotto-ed.err{border-color:var(--coral);background:#fff0f2}
+.lotto-ed .ch-griglia{margin-top:8px}
+.btn-espandi{display:block;margin:10px auto 0}
+.gruppo-riga{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:16px;background:#f3ecff;border:2px solid var(--viola);margin-bottom:10px}
+.gruppo-riga .info b{display:block}
+.gruppo-riga .info small{color:#6a4fa0}
+
+#modal{position:fixed;inset:0;z-index:8000;background:rgba(43,45,66,.5);display:none;align-items:center;justify-content:center;padding:18px}
+#modal.aperto{display:flex}
+#modal-body{background:#fff;border:4px solid var(--scuro);border-radius:24px;padding:24px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+#modal-body h3{margin-bottom:6px;font-size:22px}
+.modal-azioni{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);z-index:9500;background:var(--scuro);color:#fff;padding:14px 24px;border-radius:40px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.3);transition:transform .35s;max-width:90vw;text-align:center}
+#toast.su{transform:translateX(-50%) translateY(0)}
+
+.vuoto-msg{text-align:center;color:#999;padding:30px 10px;font-size:16px}
+.banner{background:#fff3cd;border:3px solid var(--arancio);color:#8a5a00}
+.banner code{background:#fff;border:1px solid #e3d9c4;border-radius:6px;padding:1px 6px;font-size:13px}
+footer{text-align:center;color:#a08c6b;font-size:13px;padding:20px}
+#modal-body.largo{max-width:640px;max-height:90vh;overflow-y:auto}
+.ch-prod{border:2px solid #e3d9c4;border-radius:16px;padding:12px 14px;margin-bottom:10px;background:#fffdf8}
+.ch-prod.ok{border-color:var(--teal);background:#f0fcf9}
+.ch-prod.err{border-color:var(--coral);background:#fff0f2}
+.ch-prod .ch-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.ch-prod .ch-info{font-size:13px;color:#777;margin-top:2px}
+.ch-prod input{width:110px}
+.ch-esito{font-size:13px;font-weight:600;margin-top:6px}
+.ch-sez{font-size:17px;margin:18px 0 8px}
+.ch-griglia{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.ch-griglia label.campo{margin:0}
+.ch-riep{border:3px solid var(--scuro);border-radius:18px;padding:14px;margin-top:16px;background:#faf7f0;font-size:15px}
+.ch-riep .r{display:flex;justify-content:space-between;gap:10px;padding:3px 0}
+.ch-riep .r.tot{border-top:2px dashed #ccc;margin-top:6px;padding-top:8px;font-weight:700}
+.ch-riep .verdetto{margin-top:10px;padding:10px;border-radius:12px;text-align:center;font-weight:700}
+.verdetto.ok{background:#e7fbf5;color:#138a7f}
+.verdetto.ko{background:#ffe3e7;color:var(--coral)}
+.verdetto.neutro{background:#eee;color:#666}
+.chiusura-item{border:2px solid #e3d9c4;border-radius:16px;padding:12px 14px;margin-bottom:10px;background:#fffdf8;cursor:pointer;transition:transform .1s}
+.chiusura-item:hover{transform:translateY(-2px);border-color:var(--teal)}
+.chiusura-item .ci-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.chiusura-item .ci-dati{font-size:14px;color:#555;margin-top:4px;line-height:1.6}
+.badge-diff{border-radius:40px;padding:2px 10px;font-size:13px;font-weight:700}
+.badge-diff.ok{background:#e7fbf5;color:#138a7f}
+.badge-diff.ko{background:#ffe3e7;color:var(--coral)}
+.badge-diff.neutro{background:#eee;color:#666}
+table.det{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+table.det th,table.det td{padding:6px 4px;border-bottom:1px solid #eee;text-align:right}
+table.det th:first-child,table.det td:first-child{text-align:left}
+.tab-wrap{overflow-x:auto}
+.lotti{font-size:13px;color:#777;margin-top:4px}
+.anteprima{font-size:14px;color:#777;margin-top:8px}
+</style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+
+<div id="welcome">
+  <div class="emoji-big">🎉🍻🎊</div>
+  <h1>Benvenuti al locale!</h1>
+  <p>Dove le quote si pagano (quasi) sempre, le birre spariscono misteriosamente e i turni delle pulizie… beh, ci proviamo! 😎</p>
+  <button onclick="entra()">Entra nel locale 🚪✨</button>
+</div>
+
+<header>
+  <div class="logo">🏠🍻</div>
+  <h1>Il Nostro Locale</h1>
+  <div class="sub">Quote · Frigo Bar · Spese · Pulizie — condiviso in tempo reale</div>
+</header>
+
+<nav>
+  <button data-vista="home" class="attivo" onclick="mostra('home')">🏠 Home</button>
+  <button data-vista="quote" onclick="mostra('quote')">💶 Quote</button>
+  <button data-vista="frigo" onclick="mostra('frigo')">🧊 Frigo Bar</button>
+  <button data-vista="spese" onclick="mostra('spese')">🧾 Spese</button>
+  <button data-vista="pulizie" onclick="mostra('pulizie')">🧹 Pulizie</button>
+  <span class="spacer"></span>
+  <span id="badge-ruolo">👀 Ospite</span>
+  <span id="stato-conn">⏳ Avvio…</span>
+  <button class="mini" id="btn-auth" onclick="toggleAuth()">🔑 Accedi admin</button>
+  <button class="mini" onclick="esporta()">💾 Backup</button>
+  <button class="mini solo-admin" onclick="document.getElementById('file-import').click()">📥 Importa</button>
+  <button class="mini solo-admin" onclick="resetTotale()">🧨 Reset</button>
+  <input type="file" id="file-import" accept="application/json" style="display:none" onchange="importa(event)">
+</nav>
+
+<main>
+
+  <div id="config-banner" class="card banner" style="display:none">
+    <h3 style="margin-bottom:8px">⚙️ Manca la configurazione Firebase</h3>
+    <p>Apri <code>index.html</code>, trova il blocco <code>firebaseConfig</code> in cima allo script e incolla la config del tuo progetto.</p>
+  </div>
+
+  <!-- ===== HOME ===== -->
+  <section id="vista-home" class="vista attiva">
+    <div class="card" id="cassa-card">
+      <div style="font-size:15px;opacity:.95">💰 Cassa comune del locale</div>
+      <div id="cassa-n">—</div>
+      <div id="cassa-dett" style="font-size:13px;opacity:.95"></div>
+    </div>
+    <div class="card">
+      <div class="riga" style="justify-content:space-between;align-items:baseline;margin-bottom:4px">
+        <h2 class="titolo-sez">📒 Flusso di cassa</h2>
+        <small id="cf-conta" style="color:#999"></small>
+      </div>
+      <p class="sottotitolo">Tutti i movimenti di denaro in ordine di tempo, con il saldo progressivo.</p>
+      <ul class="movimenti" id="flusso-cassa"></ul>
+      <button class="btn btn-ghost btn-sm btn-espandi" id="cf-espandi" style="display:none" onclick="toggleFlusso()"></button>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:8px">Cosa vuoi gestire?</h3>
+      <div class="riga">
+        <button class="btn btn-primario" onclick="mostra('quote')">💶 Segna le quote</button>
+        <button class="btn btn-teal" onclick="mostra('frigo')">🧊 Apri il frigo bar</button>
+        <button class="btn btn-arancio" onclick="mostra('spese')">🧾 Registra una spesa</button>
+        <button class="btn btn-viola" onclick="mostra('pulizie')">🧹 Chi pulisce?</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== QUOTE ===== -->
+  <section id="vista-quote" class="vista">
+    <div class="card">
+      <h2 class="titolo-sez">💶 Quote Mensili</h2>
+      <p class="sottotitolo">Chi ha versato? Chi fa finta di dimenticarsene? Qui si scopre tutto.</p>
+      <div class="riga solo-admin" style="margin-bottom:10px">
+        <input type="text" id="nuovo-membro" placeholder="Nome del ragazzo…" style="flex:1" onkeydown="if(event.key==='Enter')aggiungiMembro()">
+        <button class="btn btn-primario" onclick="aggiungiMembro()">➕ Aggiungi</button>
+      </div>
+      <div id="lista-chip"></div>
+      <div class="riga solo-admin" style="margin-top:14px">
+        <label class="campo" style="margin:0"><span>Quota standard (€/mese)</span>
+          <input type="number" id="importo-quota" min="0" step="0.5" style="width:120px" onchange="salvaImporto()"></label>
+        <small style="color:#777;flex-basis:100%">Vale per i mesi senza un importo specifico. Per cambiare un solo mese usa il campo sotto, nel mese scelto.</small>
+      </div>
+    </div>
+    <div class="card">
+      <div class="mese-nav">
+        <button class="freccia" onclick="cambiaMese(-1)">‹</button>
+        <select id="select-mese" onchange="renderQuote()"></select>
+        <button class="freccia" onclick="cambiaMese(1)">›</button>
+      </div>
+      <div id="riepilogo-mese"></div>
+      <div id="lista-quote" style="margin-top:14px"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:6px">⏰ Chi è in arretrato</h3>
+      <p class="sottotitolo" style="margin-bottom:10px">Quote non versate, dai mesi passati fino a questo mese.</p>
+      <div id="lista-arretrati"></div>
+    </div>
+  </section>
+
+  <!-- ===== FRIGO BAR ===== -->
+  <section id="vista-frigo" class="vista">
+    <div class="card">
+      <h2 class="titolo-sez">🧊 Frigo Bar</h2>
+      <p class="sottotitolo">Carica la spesa nell'inventario, poi fai una chiusura ogni volta che controlli il frigo: le vendite le calcola lui. 🤑</p>
+      <div class="stat-grid" id="frigo-stats"></div>
+    </div>
+    <div class="card solo-admin">
+      <h3 style="margin-bottom:10px">➕ Nuovo prodotto</h3>
+      <div class="riga">
+        <input type="text" id="p-nome" placeholder="Es. Birra Peroni 33cl" style="flex:2;min-width:160px">
+        <input type="number" id="p-vendita" placeholder="Prezzo vendita €/pz" min="0" step="0.1" style="flex:1;min-width:140px">
+      </div>
+      <div class="riga" style="margin-top:10px">
+        <select id="p-modo" onchange="anteprimaAcquisto()">
+          <option value="cassa">📦 Comprato a casse</option>
+          <option value="pezzo">🔹 Comprato a pezzi</option>
+        </select>
+        <input type="number" id="p-qta" placeholder="N° casse" min="0" step="1" style="flex:1;min-width:90px" oninput="anteprimaAcquisto()">
+        <input type="number" id="p-pzcassa" placeholder="Pezzi per cassa" min="1" step="1" style="flex:1;min-width:110px" oninput="anteprimaAcquisto()">
+        <input type="number" id="p-prezzo" placeholder="€ per cassa" min="0" step="0.01" style="flex:1;min-width:100px" oninput="anteprimaAcquisto()">
+        <button class="btn btn-teal" onclick="aggiungiProdotto()">Aggiungi al frigo</button>
+      </div>
+      <div class="anteprima" id="p-anteprima"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:12px">📦 Inventario</h3>
+      <div class="prod-grid" id="prod-grid"></div>
+    </div>
+    <div class="card">
+      <div class="riga" style="justify-content:space-between;margin-bottom:6px">
+        <h3>🔒 Chiusure</h3>
+        <button class="btn btn-teal solo-admin" onclick="apriChiusura()">➕ Nuova chiusura</button>
+      </div>
+      <p class="sottotitolo" style="margin-bottom:10px">Conti il frigo, inserisci contanti e Revolut: il gestionale calcola le vendite dall'ultima chiusura e ti dice se i conti tornano. Tocca una chiusura per il dettaglio.</p>
+      <div id="lista-chiusure"></div>
+    </div>
+    <div class="card">
+      <div class="riga" style="justify-content:space-between;margin-bottom:10px">
+        <h3>🧾 Movimenti</h3>
+        <button class="btn btn-ghost btn-sm solo-admin" onclick="aggiungiMovimento()">➕ Aggiungi movimento</button>
+      </div>
+      <ul class="movimenti" id="lista-movimenti"></ul>
+    </div>
+  </section>
+
+  <!-- ===== SPESE ===== -->
+  <section id="vista-spese" class="vista">
+    <div class="card">
+      <h2 class="titolo-sez">🧾 Spese</h2>
+      <p class="sottotitolo">Tutte le spese escono dal fondo cassa. <b>Bolletta</b>: affitto, luce, gas, wifi e canoni ricorrenti. <b>Accessorio</b>: spese una tantum (divano, cavi, detersivi…). La spesa del frigo bar non va qui: si carica con 📦 Rifornisci.</p>
+      <div class="stat-grid" id="spese-stats"></div>
+    </div>
+    <div class="card solo-admin">
+      <h3 style="margin-bottom:10px">➕ Nuova spesa</h3>
+      <div class="riga">
+        <select id="s-tipo">
+          <option value="bolletta">💡 Bolletta / affitto / canone</option>
+          <option value="accessorio">📦 Accessorio (una tantum)</option>
+        </select>
+        <input type="text" id="s-nome" placeholder="Es. Bolletta luce / Firestick" style="flex:2;min-width:150px">
+        <input type="number" id="s-importo" placeholder="Importo €" min="0" step="0.01" style="flex:1;min-width:110px">
+        <button class="btn btn-arancio" onclick="aggiungiSpesa()">Aggiungi spesa</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-bottom:12px">📋 Elenco spese</h3>
+      <ul class="movimenti" id="lista-spese"></ul>
+    </div>
+  </section>
+
+  <!-- ===== PULIZIE ===== -->
+  <section id="vista-pulizie" class="vista">
+    <div class="card">
+      <h2 class="titolo-sez">🧹 Calendario Pulizie</h2>
+      <p class="sottotitolo">Crea i gruppi, genera i turni a rotazione, o clicca un giorno per assegnarlo a mano.</p>
+      <div class="riga" style="justify-content:space-between;margin-bottom:8px">
+        <h3>👥 Gruppi</h3>
+        <div class="riga solo-admin" style="gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="generaGruppiAuto()">🎲 Crea auto</button>
+          <button class="btn btn-ghost btn-sm" onclick="aggiungiGruppo()">➕ Gruppo</button>
+          <button class="btn btn-viola btn-sm" onclick="generaTurni()">🔁 Genera turni</button>
+        </div>
+      </div>
+      <div id="lista-gruppi"></div>
+    </div>
+    <div class="card">
+      <div class="riga" style="justify-content:space-between;margin-bottom:6px">
+        <h3>📌 Promemoria mensili</h3>
+        <button class="btn btn-ghost btn-sm solo-admin" onclick="modificaPromemoria()">➕ Promemoria</button>
+      </div>
+      <p class="sottotitolo" style="margin-bottom:10px">Scadenze che si ripetono ogni mese (affitto, wifi, abbonamenti…). Compaiono nel calendario con 📌.</p>
+      <div id="lista-promemoria"></div>
+    </div>
+    <div class="card">
+      <div class="cal-head">
+        <button class="freccia" onclick="cambiaMeseCal(-1)">‹</button>
+        <h3 id="cal-titolo"></h3>
+        <button class="freccia" onclick="cambiaMeseCal(1)">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+  </section>
+
+</main>
+
+<div id="modal"><div id="modal-body"></div></div>
+<div id="toast"></div>
+
+<footer>Fatto con 🍺 per il locale · dati condivisi in tempo reale via Firebase · <b>💾 Backup</b> per scaricare una copia</footer>
+
+<script type="module">
+/* ====== CONFIG ====== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDGEWMVEkPQgA0WNIg07hiHzWG_lqQa5pU",
+  authDomain: "locale-amici.firebaseapp.com",
+  projectId: "locale-amici",
+  storageBucket: "locale-amici.firebasestorage.app",
+  messagingSenderId: "532851981311",
+  appId: "1:532851981311:web:75fbd3f17ac713a8e645ca",
+  measurementId: "G-MN8S4ZE7MN"
+};
+const ADMIN_EMAILS = ["giosuemilillo@gmail.com","marcorinaldo88@gmail.com","ottomanomatteo01@gmail.com"];
+/* ==================== */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInAnonymously, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, addDoc, getDocs, writeBatch, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+let stato = { membri:[], importoQuota:10, pagamenti:{}, frigo:{prodotti:[],movimenti:[]}, spese:[], pulizie:{}, gruppi:[], chiusure:[], quoteMesi:{}, promemoria:[] };
+let db=null, auth=null, pronto=false, listenerAvviati=false, utente=null, ruolo='viewer';
+
+const MESI_IT=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const euro=n=>Number(n||0).toLocaleString('it-IT',{style:'currency',currency:'EUR'});
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('su'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('su'),2800); }
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function oggiStr(){ const d=new Date(); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`; }
+function isoKey(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function oggiISO(){ return isoKey(new Date()); }
+function generaMesi(){ const out=[]; let y=2026,m=10; while(y<2028||(y===2028&&m<=12)){ out.push(`${y}-${String(m).padStart(2,'0')}`); if(++m>12){m=1;y++;} } return out; }
+const MESI=generaMesi();
+function labelMese(k){ const [y,m]=k.split('-'); return `${MESI_IT[+m-1]} ${y}`; }
+function setStato(txt){ const e=document.getElementById('stato-conn'); if(e) e.textContent=txt; }
+const isAdmin=()=>ruolo==='admin';
+function isAdminUser(u){ return !!u && !u.isAnonymous && ADMIN_EMAILS.map(e=>e.toLowerCase()).includes((u.email||'').toLowerCase()); }
+
+/* ====== MODALE ====== */
+function modalInput(titolo, campi, opzioni={}){
+  return new Promise(resolve=>{
+    const ov=document.getElementById('modal'), body=document.getElementById('modal-body');
+    body.innerHTML = `<h3>${esc(titolo)}</h3>` + campi.map((f,i)=>{
+      let campo;
+      if(f.type==='select'){
+        campo=`<select id="mf${i}">${(f.opzioni||[]).map(o=>`<option value="${esc(o.v)}" ${String(o.v)===String(f.value)?'selected':''}>${esc(o.label)}</option>`).join('')}</select>`;
+      } else {
+        const listId=f.lista?`dl${i}`:''; const dl=f.lista?`<datalist id="${listId}">${f.lista.map(o=>`<option value="${esc(o)}">`).join('')}</datalist>`:'';
+        campo=`<input id="mf${i}" type="${f.type||'text'}" value="${esc(f.value??'')}" ${f.min!=null?`min="${f.min}"`:''} ${f.step!=null?`step="${f.step}"`:''} ${f.lista?`list="${listId}"`:''} ${f.placeholder?`placeholder="${esc(f.placeholder)}"`:''}>${dl}`;
+      }
+      return `<label class="campo"><span>${esc(f.label)}</span>${campo}</label>`;
+    }).join('') +
+    `<div class="modal-azioni">
+       ${opzioni.rimuovi?`<button type="button" class="btn btn-ghost btn-sm" id="m-rim">🗑️ Rimuovi</button>`:''}
+       <button type="button" class="btn btn-ghost btn-sm" id="m-no">Annulla</button>
+       <button type="button" class="btn btn-primario btn-sm" id="m-ok">${esc(opzioni.okLabel||'Conferma')}</button>
+     </div>`;
+    ov.classList.add('aperto');
+    const primo=body.querySelector('input,select'); if(primo) setTimeout(()=>primo.focus(),60);
+    const raccogli=()=>{ const o={}; campi.forEach((f,i)=>o[f.name]=document.getElementById('mf'+i).value.trim()); return o; };
+    const chiudi=v=>{ ov.classList.remove('aperto'); document.removeEventListener('keydown',onKey); ov.onclick=null; resolve(v); };
+    document.getElementById('m-ok').onclick=()=>chiudi(raccogli());
+    document.getElementById('m-no').onclick=()=>chiudi(null);
+    if(opzioni.rimuovi) document.getElementById('m-rim').onclick=()=>chiudi({__rimuovi:true});
+    function onKey(e){ if(e.key==='Escape')chiudi(null); if(e.key==='Enter'){e.preventDefault();chiudi(raccogli());} }
+    document.addEventListener('keydown',onKey);
+    ov.onclick=e=>{ if(e.target===ov) chiudi(null); };
+  });
+}
+
+/* ====== NAV / RENDER ====== */
+function mostra(vista){
+  document.querySelectorAll('.vista').forEach(v=>v.classList.remove('attiva'));
+  document.getElementById('vista-'+vista).classList.add('attiva');
+  document.querySelectorAll('nav button[data-vista]').forEach(b=>b.classList.toggle('attivo', b.dataset.vista===vista));
+  refresh(); window.scrollTo({top:0,behavior:'smooth'});
+}
+function vistaAttiva(){ const s=document.querySelector('.vista.attiva'); return s?s.id.replace('vista-',''):'home'; }
+function refresh(){
+  const v=vistaAttiva();
+  if(v==='home') renderHome();
+  else if(v==='quote'){ renderChip(); renderQuote(); renderArretrati(); }
+  else if(v==='frigo') renderFrigo();
+  else if(v==='spese'){ renderSpese(); }
+  else if(v==='pulizie'){ renderGruppi(); renderPromemoria(); renderCalendario(); }
+}
+
+/* ---- HOME + CASSA ---- */
+function meseCorrenteKey(){ const o=new Date(); const k=`${o.getFullYear()}-${String(o.getMonth()+1).padStart(2,'0')}`; return MESI.includes(k)?k:MESI[0]; }
+function guadagnoFrigo(){ const sp=stato.frigo.movimenti.filter(x=>x.tipo==='acquisto').reduce((s,x)=>s+x.totale,0); const ve=stato.frigo.movimenti.filter(x=>x.tipo==='vendita').reduce((s,x)=>s+x.totale,0); return {sp,ve,g:ve-sp}; }
+function importoMese(k){ const v=stato.quoteMesi[k]; return (v!=null&&!isNaN(v)) ? v : stato.importoQuota; }
+function quoteRaccolteTot(){ return Object.entries(stato.pagamenti).reduce((s,[k,map])=>s+Object.values(map||{}).filter(Boolean).length*importoMese(k),0); }
+function speseTot(){ return stato.spese.reduce((s,x)=>s+(x.importo||0),0); }
+function movimentiCassa(){
+  // costruisce l'elenco di tutti i movimenti di denaro con timestamp
+  const ev=[];
+  // quote versate -> entrata, datata al 1° del mese
+  Object.entries(stato.pagamenti).forEach(([mese,map])=>{
+    const [y,m]=mese.split('-'); const ts=new Date(+y,+m-1,1).getTime();
+    Object.keys(map||{}).forEach(nome=>{ if(map[nome]) ev.push({ts, seg:1, imp:importoMese(mese), txt:`Quota ${labelMese(mese)} — ${nome}`, ic:'💶', cls:''}); });
+  });
+  // movimenti frigo
+  stato.frigo.movimenti.forEach(x=>{
+    if(x.tipo==='vendita') ev.push({ts:x.ts||0, seg:1, imp:x.totale, txt:`Vendita ${x.nome} ×${x.qta}`, ic:'🤑', cls:'vendita'});
+    else ev.push({ts:x.ts||0, seg:-1, imp:x.totale, txt:`Acquisto ${x.nome} ×${x.qta}`, ic:'🛒', cls:''});
+  });
+  // spese
+  stato.spese.forEach(x=>{
+    const acc=x.tipo==='accessorio';
+    ev.push({ts:x.ts||0, seg:-1, imp:x.importo||0, txt:`${acc?'Accessorio':'Bolletta'}: ${x.nome}`, ic:acc?'📦':'💡', cls:acc?'accessorio':'bolletta'});
+  });
+  ev.sort((a,b)=>a.ts-b.ts); // cronologico
+  let saldo=0; ev.forEach(e=>{ saldo+=e.seg*e.imp; e.saldo=saldo; });
+  return ev;
+}
+let flussoEsteso=false;
+function toggleFlusso(){ flussoEsteso=!flussoEsteso; renderHome(); if(!flussoEsteso) document.getElementById('flusso-cassa').scrollIntoView({behavior:'smooth',block:'start'}); }
+function renderHome(){
+  const {g:guad}=guadagnoFrigo();
+  const totSpese=speseTot(), quoteRacc=quoteRaccolteTot(), cassa=quoteRacc+guad-totSpese;
+  const cn=document.getElementById('cassa-n'); cn.textContent=euro(cassa);
+  document.getElementById('cassa-card').style.background = cassa>=0 ? 'linear-gradient(135deg,var(--teal),var(--blu))' : 'linear-gradient(135deg,var(--coral),var(--arancio))';
+  document.getElementById('cassa-dett').textContent=`Quote ${euro(quoteRacc)} + guadagno frigo ${euro(guad)} − spese ${euro(totSpese)}`;
+  // flusso di cassa (più recenti in alto)
+  const ev=movimentiCassa();
+  const ul=document.getElementById('flusso-cassa');
+  document.getElementById('cf-conta').textContent = ev.length? `${ev.length} movimenti` : '';
+  const btnE=document.getElementById('cf-espandi');
+  if(!ev.length){ btnE.style.display='none'; ul.innerHTML=`<div class="vuoto-msg" style="padding:14px">Ancora nessun movimento. Segna una quota, una vendita o una spesa. 🍻</div>`; return; }
+  const LIM=25;
+  btnE.style.display = ev.length>LIM ? '' : 'none';
+  btnE.textContent = flussoEsteso ? '▲ Comprimi' : `▼ Estendi (tutti i ${ev.length} movimenti)`;
+  ul.innerHTML=[...ev].reverse().slice(0, flussoEsteso ? ev.length : LIM).map(e=>{
+    const d=e.ts? new Date(e.ts): null;
+    const data=d? `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}` : '';
+    return `<li class="${e.cls}">
+      <span>${e.ic} ${esc(e.txt)} <small style="color:#999">${data}</small></span>
+      <span class="val"><span class="${e.seg>0?'pos':'neg'}">${e.seg>0?'+':'−'}${euro(e.imp)}</span> <small style="color:#777">saldo ${euro(e.saldo)}</small></span>
+    </li>`;
+  }).join('');
+}
+function prossimoTurno(){
+  const oggi=new Date(); oggi.setHours(0,0,0,0);
+  const chiavi=Object.keys(stato.pulizie).filter(k=>stato.pulizie[k]).sort();
+  for(const k of chiavi){ const d=new Date(k+'T00:00:00'); if(d>=oggi){ const [,m,g]=k.split('-'); return {nome:stato.pulizie[k], data:`${+g} ${MESI_IT[+m-1]}`}; } }
+  return null;
+}
+
+/* ---- QUOTE ---- */
+let meseSel=null;
+function renderChip(){
+  const imp=document.getElementById('importo-quota'); imp.value=stato.importoQuota; imp.disabled=!isAdmin();
+  const box=document.getElementById('lista-chip');
+  if(!stato.membri.length){ box.innerHTML=`<div class="vuoto-msg" style="padding:14px">Nessun ragazzo ancora.${isAdmin()?' Aggiungine uno qui sopra! 👆':''}</div>`; return; }
+  box.innerHTML=stato.membri.map(m=>`<span class="chip">${esc(m)}${isAdmin()?` <button onclick="rimuoviMembro('${esc(m)}')" title="Rimuovi">✕</button>`:''}</span>`).join('');
+}
+function popolaSelectMese(){ const sel=document.getElementById('select-mese'); sel.innerHTML=MESI.map(k=>`<option value="${k}">${labelMese(k)}</option>`).join(''); if(!meseSel) meseSel=meseCorrenteKey(); sel.value=meseSel; }
+function cambiaMese(dir){ const i=MESI.indexOf(document.getElementById('select-mese').value); const j=Math.min(MESI.length-1,Math.max(0,i+dir)); document.getElementById('select-mese').value=MESI[j]; renderQuote(); }
+function renderQuote(){
+  meseSel=document.getElementById('select-mese').value;
+  const pag=stato.pagamenti[meseSel]||{}, lista=document.getElementById('lista-quote');
+  if(!stato.membri.length){ lista.innerHTML=`<div class="vuoto-msg">Nessun ragazzo da mostrare</div>`; document.getElementById('riepilogo-mese').innerHTML=''; return; }
+  const versati=stato.membri.filter(m=>pag[m]).length, tot=stato.membri.length, perc=tot?Math.round(versati/tot*100):0;
+  document.getElementById('riepilogo-mese').innerHTML=`
+    <div class="riga" style="justify-content:space-between"><b>${versati} su ${tot} hanno versato</b>
+    <b style="color:var(--teal)">Raccolto: ${euro(versati*importoMese(meseSel))} / ${euro(tot*importoMese(meseSel))}</b></div>
+    <div class="progress"><div style="width:${perc}%"></div></div>
+    <div class="riga" style="margin-top:12px;justify-content:space-between">
+      <span>💶 Quota di ${labelMese(meseSel)}: <b>${euro(importoMese(meseSel))}</b> a testa${stato.quoteMesi[meseSel]!=null?' <small style="color:#999">(specifica del mese)</small>':' <small style="color:#999">(standard)</small>'}</span>
+      ${isAdmin()?`<span class="riga" style="gap:6px"><input type="number" id="importo-mese" min="0" step="0.5" style="width:100px" value="${importoMese(meseSel)}"><button class="btn btn-ghost btn-sm" onclick="salvaImportoMese()">Salva per questo mese</button>${stato.quoteMesi[meseSel]!=null?`<button class="btn btn-ghost btn-sm" onclick="salvaImportoMese(true)">↺ Standard</button>`:''}</span>`:''}
+    </div>`;
+  lista.innerHTML=stato.membri.map(m=>{
+    const ok=!!pag[m];
+    const ctrl=isAdmin()
+      ? `<button class="toggle-quota ${ok?'si':'no'}" onclick="toggleQuota('${esc(m)}')">${ok?'Versata':'Non versata'}</button>`
+      : `<span class="toggle-quota ${ok?'si':'no'}">${ok?'Versata':'Non versata'}</span>`;
+    return `<div class="membro-riga ${ok?'pagato':''}"><span class="membro-nome">${ok?'✅':'⏳'} ${esc(m)}</span>${ctrl}</div>`;
+  }).join('');
+}
+function renderArretrati(){
+  const box=document.getElementById('lista-arretrati');
+  if(!stato.membri.length){ box.innerHTML=`<div class="vuoto-msg" style="padding:14px">Nessun ragazzo.</div>`; return; }
+  const idx=MESI.indexOf(meseCorrenteKey());
+  const mesiDovuti=MESI.slice(0, idx+1);
+  const arr=stato.membri.map(m=>{ let mancanti=0; mesiDovuti.forEach(k=>{ if(!(stato.pagamenti[k]||{})[m]) mancanti++; }); let dovuto=0; mesiDovuti.forEach(k=>{ if(!(stato.pagamenti[k]||{})[m]) dovuto+=importoMese(k); }); return {nome:m, mancanti, dovuto}; })
+    .filter(x=>x.mancanti>0).sort((a,b)=>b.dovuto-a.dovuto);
+  if(!arr.length){ box.innerHTML=`<div class="vuoto-msg" style="padding:14px">Tutti in regola! 🎉🍻</div>`; return; }
+  box.innerHTML=arr.map(x=>`<div class="membro-riga allarme">
+      <span class="membro-nome">⏳ ${esc(x.nome)}</span>
+      <span><b class="neg">${euro(x.dovuto)}</b> <small style="color:#777">· ${x.mancanti} ${x.mancanti===1?'mese':'mesi'}</small></span>
+    </div>`).join('');
+}
+
+/* ---- FRIGO ---- */
+/* ---- LOTTI (prezzi d'acquisto diversi) ---- */
+const r2=n=>Math.round(n*100)/100;
+function lottiDi(p){
+  if(Array.isArray(p.lotti)) return p.lotti;
+  // prodotti creati con la vecchia versione: un unico lotto al vecchio prezzo
+  return (p.stock||0)>0 ? [{id:'legacy',qta:p.stock,rimanenti:p.stock,totale:p.stock*(p.acquisto||0),ts:0,data:''}] : [];
+}
+function costoPz(l){ return l.qta>0 ? l.totale/l.qta : 0; }
+function valoreScorte(p){ return lottiDi(p).reduce((s,l)=>s+l.rimanenti*costoPz(l),0); }
+function consumaFIFO(lotti,n){
+  const out=lotti.map(l=>({...l})).sort((a,b)=>(a.ts||0)-(b.ts||0));
+  let rest=n, costo=0; const consumi=[];
+  for(const l of out){ if(rest<=0) break; const t=Math.min(l.rimanenti,rest); if(t<=0) continue; costo+=t*costoPz(l); l.rimanenti-=t; rest-=t; consumi.push({lottoId:l.id,n:t}); }
+  return { lotti: out, costo, consumi };
+}
+function euro4(n){ return (Math.round(n*10000)/10000).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:4})+' €'; }
+function leggiAcquisto(modo,qta,pzCassa,prezzo){
+  const q=parseInt(qta)||0, pc=parseInt(pzCassa)||0, pr=parseFloat(prezzo);
+  if(q<=0||isNaN(pr)||pr<0) return null;
+  if(modo==='cassa'){ if(pc<=0) return null; return {pezzi:q*pc, totale:r2(q*pr)}; }
+  return {pezzi:q, totale:r2(q*pr)};
+}
+function anteprimaAcquisto(){
+  const modo=document.getElementById('p-modo').value;
+  const pc=document.getElementById('p-pzcassa');
+  pc.style.display = modo==='cassa' ? '' : 'none';
+  document.getElementById('p-qta').placeholder = modo==='cassa' ? 'N° casse' : 'N° pezzi';
+  document.getElementById('p-prezzo').placeholder = modo==='cassa' ? '€ per cassa' : '€ per pezzo';
+  const a=leggiAcquisto(modo,document.getElementById('p-qta').value,pc.value,document.getElementById('p-prezzo').value);
+  document.getElementById('p-anteprima').textContent = a ? `= ${a.pezzi} pezzi · totale pagato ${euro(a.totale)} · ${euro4(a.totale/a.pezzi)} al pezzo` : '';
+}
+
+function renderFrigo(){
+  const {sp:spesa,ve:vend,g:guad}=guadagnoFrigo();
+  const incasso=stato.frigo.prodotti.reduce((s,p)=>s+p.vendita*p.stock,0);
+  const atteso=stato.frigo.prodotti.reduce((s,p)=>s+p.vendita*p.stock-valoreScorte(p),0);
+  document.getElementById('frigo-stats').innerHTML=`
+    <div class="stat c2"><div class="lbl">💸 Spesa totale</div><div class="n">${euro(spesa)}</div></div>
+    <div class="stat c3"><div class="lbl">💰 Vendite totali</div><div class="n">${euro(vend)}</div><div class="lbl">dalle chiusure</div></div>
+    <div class="stat ${guad>=0?'pos':'neg'}"><div class="lbl">📈 Guadagno attuale</div><div class="n">${euro(guad)}</div></div>
+    <div class="stat c4"><div class="lbl">🧾 Incasso atteso</div><div class="n">${euro(incasso)}</div><div class="lbl">vendendo tutte le scorte</div></div>
+    <div class="stat c1"><div class="lbl">🔮 Guadagno atteso</div><div class="n">${euro(atteso)}</div><div class="lbl">incasso − costo delle scorte</div></div>`;
+  const grid=document.getElementById('prod-grid');
+  if(!stato.frigo.prodotti.length){ grid.innerHTML=`<div class="vuoto-msg">Il frigo è vuoto! 🕳️</div>`; }
+  else grid.innerHTML=stato.frigo.prodotti.map(p=>{
+    const lotti=lottiDi(p), val=valoreScorte(p);
+    const medio=p.stock>0 ? val/p.stock : (p.acquisto||0);
+    const attivi=lotti.filter(l=>l.rimanenti>0);
+    const lottiTxt=attivi.length ? attivi.map(l=>`${l.rimanenti} pz a ${euro4(costoPz(l))}`).join(' · ') : 'nessuna scorta';
+    const azioni=isAdmin()?`<div class="prod-azioni">
+        <button class="btn btn-teal btn-sm" onclick="rifornisci('${p.id}')">📦 Rifornisci</button>
+        <button class="btn btn-ghost btn-sm" onclick="modificaProdotto('${p.id}')">✏️</button>
+        <button class="btn btn-ghost btn-sm" onclick="eliminaProdotto('${p.id}')">🗑️</button></div>`:'';
+    return `<div class="prod"><h3>${esc(p.nome)}</h3>
+      <div class="prezzi">🛒 Costo medio: <b>${euro4(medio)}</b><br>🏷️ Vendita: <b>${euro(p.vendita)}</b><br>Margine medio: <span class="margine">${euro(p.vendita-medio)}/pz</span><br>💰 Incasso atteso: <b>${euro(p.vendita*p.stock)}</b><br>🔮 Guadagno atteso: <b>${euro(p.vendita*p.stock-val)}</b></div>
+      <div class="lotti">🧺 Lotti: ${esc(lottiTxt)}</div>
+      <div class="stock ${p.stock<=0?'zero':''}">📦 ${p.stock} pz</div>${azioni}</div>`;
+  }).join('');
+  renderChiusure();
+  const ul=document.getElementById('lista-movimenti');
+  const movs=[...stato.frigo.movimenti].slice(-50).reverse();
+  if(!movs.length){ ul.innerHTML=`<div class="vuoto-msg" style="padding:14px">Ancora nessun movimento.</div>`; }
+  else ul.innerHTML=movs.map(x=>`<li class="${x.tipo==='vendita'?'vendita':''}">
+      <span>${x.tipo==='vendita'?'🤑':'🛒'} ${esc(x.nome)} ×${x.qta} <small style="color:#999">${esc(x.data||'')}${x.chiusuraId?' · da chiusura':''}</small></span>
+      <span class="val"><span style="color:${x.tipo==='vendita'?'var(--teal)':'var(--coral)'}">${x.tipo==='vendita'?'+':'−'}${euro(x.totale)}</span>${isAdmin()&&!x.chiusuraId?`<button class="del" title="Elimina" onclick="eliminaMovimento('${x.id}')">✕</button>`:''}</span></li>`).join('');
+}
+
+/* ---- CHIUSURE ---- */
+function ultimaChiusura(){ return stato.chiusure.length ? stato.chiusure[stato.chiusure.length-1] : null; }
+function dataOra(ts){ const d=new Date(ts); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+function classeDiff(c){ if(c.differenza==null) return 'neutro'; return Math.abs(c.differenza)<0.01 ? 'ok' : 'ko'; }
+function testoDiff(d){ if(d==null) return 'punto di partenza'; if(Math.abs(d)<0.01) return '✅ conti tornano'; return d<0 ? `⚠️ mancano ${euro(-d)}` : `➕ ${euro(d)} in più`; }
+
+function renderChiusure(){
+  const box=document.getElementById('lista-chiusure'); if(!box) return;
+  if(!stato.chiusure.length){ box.innerHTML=`<div class="vuoto-msg" style="padding:14px">Nessuna chiusura ancora. La prima fa da punto di partenza. 🔒</div>`; return; }
+  const ultimaId=ultimaChiusura().id;
+  box.innerHTML=[...stato.chiusure].reverse().map(c=>`
+    <div class="chiusura-item" onclick="dettaglioChiusura('${c.id}')">
+      <div class="ci-top"><b>🔒 ${esc(c.nome)}</b><span class="badge-diff ${classeDiff(c)}">${testoDiff(c.differenza)}</span></div>
+      <div class="ci-dati">💵 Contanti ${euro(c.contanti)} · 💳 Revolut ${euro(c.revolut)}<br>🤑 Fatturato periodo ${euro(c.fatturato)} · 📈 Guadagno ${euro(c.guadagno)}${c.id===ultimaId?' · <small style="color:#999">ultima</small>':''}</div>
+    </div>`).join('');
+}
+
+function dettaglioChiusura(id){
+  const c=stato.chiusure.find(x=>x.id===id); if(!c) return;
+  const ov=document.getElementById('modal'), body=document.getElementById('modal-body');
+  body.classList.add('largo');
+  const righe=(c.righe||[]).map(r=>`<tr><td>${esc(r.nome)}</td><td>${r.precedente??'—'}</td><td>${r.riforniti}</td><td>${r.contati}</td><td><b>${r.venduti}</b></td><td>${euro(r.fatturato)}</td></tr>`).join('');
+  const eUltima=ultimaChiusura()?.id===id;
+  body.innerHTML=`<h3>🔒 ${esc(c.nome)}</h3>
+    <p class="sottotitolo">${c.daNome?`Periodo dalla chiusura del ${esc(c.daNome)}`:'Prima chiusura (punto di partenza)'}</p>
+    <div class="tab-wrap"><table class="det"><thead><tr><th>Prodotto</th><th>Ultima</th><th>Riforniti</th><th>Contati</th><th>Venduti</th><th>Fatturato</th></tr></thead><tbody>${righe}</tbody></table></div>
+    <div class="ch-riep">
+      <div class="r"><span>🤑 Fatturato periodo</span><b>${euro(c.fatturato)}</b></div>
+      <div class="r"><span>🛒 Costo merce venduta</span><span>${euro(c.costoVenduto)}</span></div>
+      <div class="r"><span>📈 Guadagno periodo</span><b>${euro(c.guadagno)}</b></div>
+      ${c.cassaPrec!=null?`
+      <div class="r tot"><span>Cassa alla chiusura precedente</span><span>${euro(c.cassaPrec)}</span></div>
+      <div class="r"><span>+ Vendite frigo</span><span>${euro(c.fatturato)}</span></div>
+      <div class="r"><span>+ Entrate extra (quote, collette…)</span><span>${euro(c.entrateExtra)}</span></div>
+      <div class="r"><span>− Spese del periodo</span><span>${euro(c.spesePeriodo)}</span></div>
+      <div class="r"><span>− Spesa frigo del periodo</span><span>${euro(c.acquistiFrigo)}</span></div>
+      <div class="r tot"><span>Cassa attesa</span><span>${euro(c.atteso)}</span></div>`:''}
+      <div class="r"><span>💵 Contanti</span><span>${euro(c.contanti)}</span></div>
+      <div class="r"><span>💳 Revolut</span><span>${euro(c.revolut)}</span></div>
+      <div class="r tot"><span>Cassa reale</span><span>${euro(c.reale)}</span></div>
+      <div class="verdetto ${classeDiff(c)}">${testoDiff(c.differenza)}</div>
+      ${c.note?`<p style="margin-top:8px;font-size:14px;color:#555">📝 ${esc(c.note)}</p>`:''}
+    </div>
+    <div class="modal-azioni">
+      ${isAdmin()&&eUltima?`<button type="button" class="btn btn-ghost btn-sm" id="m-del">↩️ Annulla questa chiusura</button>`:''}
+      <button type="button" class="btn btn-primario btn-sm" id="m-no">Chiudi</button>
+    </div>`;
+  ov.classList.add('aperto');
+  const chiudi=()=>{ ov.classList.remove('aperto'); body.classList.remove('largo'); ov.onclick=null; };
+  document.getElementById('m-no').onclick=chiudi;
+  ov.onclick=e=>{ if(e.target===ov) chiudi(); };
+  const del=document.getElementById('m-del'); if(del) del.onclick=()=>{ chiudi(); eliminaChiusura(id); };
+}
+
+function apriChiusura(){
+  if(!puoiModificare()) return;
+  if(!stato.frigo.prodotti.length){ toast('Prima carica qualche prodotto 🧊'); return; }
+  const ult=ultimaChiusura(), daTs=ult?ult.ts:0, ora=Date.now();
+  const prodotti=stato.frigo.prodotti.map(p=>{
+    const riforniti=stato.frigo.movimenti.filter(m=>m.tipo==='acquisto'&&m.prodottoId===p.id&&(m.ts||0)>daTs).reduce((s,m)=>s+(m.qta||0),0);
+    const riga=ult?(ult.righe||[]).find(r=>r.prodottoId===p.id):null;
+    return { p, riforniti: ult?riforniti:0, precedente: riga?riga.contati:null, attesi:p.stock };
+  });
+  const speseList=stato.spese.filter(x=>(x.ts||0)>daTs);
+  const speseTotP=r2(speseList.reduce((s,x)=>s+(x.importo||0),0));
+  const acqFrigo=r2(stato.frigo.movimenti.filter(m=>m.tipo==='acquisto'&&(m.ts||0)>daTs).reduce((s,m)=>s+(m.totale||0),0));
+  const cassaPrec = ult ? r2((ult.contanti||0)+(ult.revolut||0)) : null;
+
+  const ov=document.getElementById('modal'), body=document.getElementById('modal-body');
+  body.classList.add('largo');
+  body.innerHTML=`<h3>🔒 Chiusura del ${dataOra(ora)}</h3>
+    <p class="sottotitolo">${ult?`Dall'ultima chiusura: <b>${esc(ult.nome)}</b>`:'Prima chiusura: fa da punto di partenza.'}</p>
+    <div class="ch-sez">1️⃣ Conta il frigo</div>
+    ${prodotti.map((x,i)=>`<div class="ch-prod" id="chp${i}">
+      <div class="ch-top"><b>${esc(x.p.nome)}</b><input type="number" id="chc${i}" min="0" step="1" placeholder="Quanti ora?" inputmode="numeric"></div>
+      <div class="ch-info">${x.precedente!=null?`Ultima chiusura: ${x.precedente} · riforniti dopo: ${x.riforniti} · `:''}dovrebbero essercene <b>${x.attesi}</b></div>
+      <div class="ch-esito" id="che${i}"></div></div>`).join('')}
+    <div class="ch-sez">2️⃣ Soldi in cassa adesso</div>
+    <div class="ch-griglia">
+      <label class="campo"><span>💵 Contanti nella cassettina</span><input type="number" id="ch-contanti" min="0" step="0.01"></label>
+      <label class="campo"><span>💳 Saldo Revolut</span><input type="number" id="ch-revolut" min="0" step="0.01"></label>
+    </div>
+    ${ult?`<div class="ch-sez">3️⃣ Movimenti del periodo</div>
+    <div class="ch-griglia">
+      <label class="campo"><span>🧾 Spese (${speseList.length} registrate)</span><input type="number" id="ch-spese" step="0.01" value="${speseTotP}"></label>
+      <label class="campo"><span>🛒 Spesa frigo (rifornimenti)</span><input type="number" id="ch-acqfrigo" step="0.01" value="${acqFrigo}"></label>
+      <label class="campo"><span>➕ Entrate extra (quote, collette, avanzi)</span><input type="number" id="ch-entrate" step="0.01" value="0"></label>
+    </div>
+    ${speseList.length?`<p class="anteprima">Spese registrate: ${speseList.map(x=>`${esc(x.nome)} ${euro(x.importo)}`).join(' · ')}</p>`:''}
+    <p class="anteprima">Puoi correggere i valori se qualcosa non è passato dalla cassa (es. un rifornimento pagato da un ragazzo e non ancora restituito).</p>`:''}
+    <label class="campo"><span>📝 Note (facoltative)</span><input type="text" id="ch-note" placeholder="Es. Marco deve ancora mettere 2 €"></label>
+    <div class="ch-riep" id="ch-riep"></div>
+    <div class="modal-azioni">
+      <button type="button" class="btn btn-ghost btn-sm" id="m-no">Annulla</button>
+      <button type="button" class="btn btn-teal btn-sm" id="m-ok">💾 Salva chiusura</button>
+    </div>`;
+  ov.classList.add('aperto');
+  const num=id=>{ const e=document.getElementById(id); if(!e) return 0; const v=parseFloat(e.value); return isNaN(v)?0:v; };
+
+  function calcola(){
+    let fatt=0, costo=0, errori=[], mancanti=0; const righe=[];
+    prodotti.forEach((x,i)=>{
+      const inp=document.getElementById('chc'+i), box=document.getElementById('chp'+i), es=document.getElementById('che'+i);
+      if(inp.value===''){ mancanti++; box.className='ch-prod'; es.textContent=''; return; }
+      const c=parseInt(inp.value);
+      if(isNaN(c)||c<0){ errori.push(x.p.nome); box.className='ch-prod err'; es.textContent='Numero non valido'; return; }
+      if(c>x.attesi){ errori.push(x.p.nome); box.className='ch-prod err'; es.innerHTML=`Ne conti più del previsto (${x.attesi}). Se hai comprato altro, usa prima 📦 Rifornisci.`; return; }
+      const venduti=x.attesi-c, f=r2(venduti*x.p.vendita), cons=consumaFIFO(lottiDi(x.p),venduti);
+      fatt+=f; costo+=cons.costo;
+      box.className='ch-prod ok'; es.textContent = venduti ? `Venduti ${venduti} → ${euro(f)}` : 'Nessuna vendita';
+      righe.push({prodottoId:x.p.id,nome:x.p.nome,precedente:x.precedente,riforniti:x.riforniti,attesi:x.attesi,contati:c,venduti,prezzo:x.p.vendita,fatturato:f,costo:r2(cons.costo),consumi:cons.consumi,nuoviLotti:cons.lotti,lottiPrima:lottiDi(x.p),stockPrima:x.p.stock});
+    });
+    fatt=r2(fatt); costo=r2(costo);
+    const contanti=num('ch-contanti'), revolut=num('ch-revolut'), reale=r2(contanti+revolut);
+    const spese=num('ch-spese'), acq=num('ch-acqfrigo'), entrate=num('ch-entrate');
+    const atteso = cassaPrec!=null ? r2(cassaPrec+fatt+entrate-spese-acq) : null;
+    const diff = atteso!=null ? r2(reale-atteso) : null;
+    const completi = !mancanti && !errori.length && document.getElementById('ch-contanti').value!=='' && document.getElementById('ch-revolut').value!=='';
+    document.getElementById('ch-riep').innerHTML=`
+      <div class="r"><span>🤑 Fatturato del periodo</span><b>${euro(fatt)}</b></div>
+      <div class="r"><span>📈 Guadagno (fatturato − costo merce)</span><span>${euro(fatt-costo)}</span></div>
+      ${cassaPrec!=null?`
+      <div class="r tot"><span>Cassa alla chiusura precedente</span><span>${euro(cassaPrec)}</span></div>
+      <div class="r"><span>+ Vendite frigo</span><span>${euro(fatt)}</span></div>
+      <div class="r"><span>+ Entrate extra</span><span>${euro(entrate)}</span></div>
+      <div class="r"><span>− Spese</span><span>${euro(spese)}</span></div>
+      <div class="r"><span>− Spesa frigo</span><span>${euro(acq)}</span></div>
+      <div class="r tot"><span>Cassa attesa</span><span>${euro(atteso)}</span></div>`:''}
+      <div class="r"><span>Cassa reale (contanti + Revolut)</span><b>${euro(reale)}</b></div>
+      <div class="verdetto ${!completi?'neutro':(diff==null?'neutro':(Math.abs(diff)<0.01?'ok':'ko'))}">${!completi?(mancanti?`Mancano ancora ${mancanti} prodotti da contare`:(errori.length?'Correggi i prodotti in rosso':'Inserisci contanti e Revolut')):testoDiff(diff)}</div>`;
+    return {righe,fatt,costo,contanti,revolut,reale,spese,acq,entrate,atteso,diff,completi};
+  }
+  body.querySelectorAll('input').forEach(e=>e.addEventListener('input',calcola));
+  calcola();
+  setTimeout(()=>{ const f=document.getElementById('chc0'); if(f) f.focus(); },60);
+  const chiudi=()=>{ ov.classList.remove('aperto'); body.classList.remove('largo'); ov.onclick=null; };
+  document.getElementById('m-no').onclick=chiudi;
+  document.getElementById('m-ok').onclick=async()=>{
+    const r=calcola();
+    if(!r.completi){ toast('Completa tutti i campi prima di salvare ✋'); return; }
+    const btn=document.getElementById('m-ok'); btn.disabled=true; btn.textContent='Salvo…';
+    try{
+      const ts=Date.now(), nome=dataOra(ts), cref=doc(collection(db,'chiusure'));
+      const batch=writeBatch(db);
+      r.righe.forEach(rg=>{
+        batch.update(doc(db,'prodotti',rg.prodottoId), {stock:rg.contati, lotti:rg.nuoviLotti});
+        if(rg.venduti>0) batch.set(doc(collection(db,'movimenti')), {tipo:'vendita',prodottoId:rg.prodottoId,nome:rg.nome,qta:rg.venduti,totale:rg.fatturato,data:oggiStr(),ts,chiusuraId:cref.id});
+      });
+      const righeSalvate=r.righe.map(({nuoviLotti,...resto})=>resto);
+      batch.set(cref, {nome, ts, daNome: ult?ult.nome:'', righe:righeSalvate,
+        contanti:r2(r.contanti), revolut:r2(r.revolut), reale:r.reale, cassaPrec,
+        spesePeriodo: ult?r2(r.spese):0, acquistiFrigo: ult?r2(r.acq):0, entrateExtra: ult?r2(r.entrate):0,
+        fatturato:r.fatt, costoVenduto:r.costo, guadagno:r2(r.fatt-r.costo),
+        atteso:r.atteso, differenza:r.diff, note:document.getElementById('ch-note').value.trim()});
+      await batch.commit();
+      chiudi(); toast(r.diff==null?'Punto di partenza salvato 🔒':(Math.abs(r.diff)<0.01?'Chiusura salvata: i conti tornano ✅':'Chiusura salvata ⚠️ '+testoDiff(r.diff)));
+    }catch(e){ console.error(e); toast('Salvataggio non riuscito 😕'); btn.disabled=false; btn.textContent='💾 Salva chiusura'; }
+  };
+}
+
+async function eliminaChiusura(id){
+  if(!puoiModificare()) return;
+  const c=stato.chiusure.find(x=>x.id===id); if(!c||ultimaChiusura().id!==id){ toast('Si può annullare solo l\'ultima chiusura'); return; }
+  const ids=(c.righe||[]).map(r=>r.prodottoId);
+  if(stato.frigo.movimenti.some(m=>m.tipo==='acquisto'&&ids.includes(m.prodottoId)&&(m.ts||0)>c.ts)){ toast('Dopo questa chiusura ci sono rifornimenti: eliminali prima 🙏'); return; }
+  const r=await modalInput(`Annullare la chiusura del ${c.nome}?`, [], {okLabel:'Sì, annulla 🗑️'});
+  if(r===null) return;
+  const batch=writeBatch(db);
+  (c.righe||[]).forEach(rg=>{
+    const pr=stato.frigo.prodotti.find(p=>p.id===rg.prodottoId); if(!pr) return;
+    const attuali=lottiDi(pr);
+    const lotti=(rg.lottiPrima||[]).map(l=>{ const cur=attuali.find(x=>x.id===l.id); return cur ? {...l, qta:cur.qta, totale:cur.totale, rimanenti:Math.max(0,l.rimanenti+(cur.qta-l.qta))} : l; });
+    const stock = lotti.length ? lotti.reduce((s,l)=>s+l.rimanenti,0) : rg.stockPrima;
+    batch.update(doc(db,'prodotti',rg.prodottoId), {stock, lotti});
+  });
+  stato.frigo.movimenti.filter(m=>m.chiusuraId===id).forEach(m=>batch.delete(doc(db,'movimenti',m.id)));
+  batch.delete(doc(db,'chiusure',id));
+  await batch.commit(); toast('Chiusura annullata, inventario ripristinato ↩️');
+}
+
+/* ---- SPESE ---- */
+function renderSpese(){
+  const bollette=stato.spese.filter(x=>x.tipo==='bolletta').reduce((s,x)=>s+(x.importo||0),0);
+  const accessori=stato.spese.filter(x=>x.tipo==='accessorio').reduce((s,x)=>s+(x.importo||0),0);
+  document.getElementById('spese-stats').innerHTML=`
+    <div class="stat c5"><div class="lbl">💡 Bollette</div><div class="n">${euro(bollette)}</div></div>
+    <div class="stat c4"><div class="lbl">📦 Accessori</div><div class="n">${euro(accessori)}</div></div>
+    <div class="stat c2"><div class="lbl">🧾 Totale spese</div><div class="n">${euro(bollette+accessori)}</div></div>`;
+  const ul=document.getElementById('lista-spese');
+  const list=[...stato.spese].reverse();
+  if(!list.length){ ul.innerHTML=`<div class="vuoto-msg" style="padding:14px">Ancora nessuna spesa.</div>`; return; }
+  ul.innerHTML=list.map(x=>{ const acc=x.tipo==='accessorio';
+    return `<li class="${acc?'accessorio':'bolletta'}">
+      <span>${acc?'📦':'💡'} ${esc(x.nome)} <span class="tag ${acc?'acc':'bol'}">${acc?'accessorio':'bolletta'}</span><small style="color:#999">${esc(x.data||'')}</small></span>
+      <span class="val"><span style="color:var(--arancio)">${euro(x.importo)}</span>${isAdmin()?`<button class="del" title="Elimina" onclick="eliminaSpesa('${x.id}')">✕</button>`:''}</span></li>`;
+  }).join('');
+}
+/* ---- CALENDARIO + GRUPPI ---- */
+let calAnno, calMese;
+function initCal(){ const o=new Date(); calAnno=o.getFullYear(); calMese=o.getMonth(); if(calAnno<2026){calAnno=2026;calMese=9;} }
+function cambiaMeseCal(d){ calMese+=d; if(calMese<0){calMese=11;calAnno--;} if(calMese>11){calMese=0;calAnno++;} renderCalendario(); }
+function renderCalendario(){
+  document.getElementById('cal-titolo').textContent=`${MESI_IT[calMese]} ${calAnno}`;
+  const grid=document.getElementById('cal-grid');
+  const dow=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+  let html=dow.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  const offset=(new Date(calAnno,calMese,1).getDay()+6)%7, giorni=new Date(calAnno,calMese+1,0).getDate();
+  const oggiStamp=oggiISO();
+  for(let i=0;i<offset;i++) html+=`<div class="cal-day vuoto"></div>`;
+  for(let g=1;g<=giorni;g++){
+    const key=`${calAnno}-${String(calMese+1).padStart(2,'0')}-${String(g).padStart(2,'0')}`;
+    const turno=stato.pulizie[key];
+    const proms=stato.promemoria.filter(p=>Math.min(p.giorno,giorni)===g);
+    const click=isAdmin()?`onclick="assegnaTurno('${key}','${g} ${MESI_IT[calMese]}')"`:'';
+    html+=`<div class="cal-day ${turno?'assegnato':''} ${proms.length?'ha-prom':''} ${key===oggiStamp?'oggi':''}" ${click}><span class="num">${g}</span>${proms.map(p=>`<span class="prom">📌 ${esc(p.nome)}</span>`).join('')}${turno?`<span class="turno">${esc(turno)}</span>`:''}</div>`;
+  }
+  grid.innerHTML=html;
+}
+function renderPromemoria(){
+  const box=document.getElementById('lista-promemoria'); if(!box) return;
+  if(!stato.promemoria.length){ box.innerHTML=`<div class="vuoto-msg" style="padding:14px">Nessun promemoria.${isAdmin()?' Aggiungine uno con "➕ Promemoria".':''}</div>`; return; }
+  box.innerHTML=[...stato.promemoria].sort((a,b)=>a.giorno-b.giorno).map(p=>`<div class="prom-riga">
+      <span class="gg">ogni ${p.giorno}</span>
+      <span style="flex:1"><b>${esc(p.nome)}</b>${p.importo?` · ${euro(p.importo)}`:''}${p.note?`<br><small style="color:#777">${esc(p.note)}</small>`:''}</span>
+      ${isAdmin()?`<button class="btn btn-ghost btn-sm" onclick="modificaPromemoria('${p.id}')">✏️</button>`:''}
+    </div>`).join('');
+}
+async function modificaPromemoria(id){
+  if(!puoiModificare()) return;
+  const p=id?stato.promemoria.find(x=>x.id===id):null;
+  const r=await modalInput(p?`Modifica — ${p.nome}`:'Nuovo promemoria mensile', [
+    {name:'nome',label:'Cosa? (es. Affitto, Wifi, Amazon)',type:'text',value:p?p.nome:''},
+    {name:'giorno',label:'Giorno del mese (1–31)',type:'number',value:p?p.giorno:'',min:1,step:1},
+    {name:'importo',label:'Importo € (facoltativo)',type:'number',value:p&&p.importo?p.importo:'',min:0,step:0.01},
+    {name:'note',label:'Note (facoltative)',type:'text',value:p?(p.note||''):'',placeholder:'Es. bonifico al proprietario'}
+  ], {rimuovi:!!p, okLabel:'Salva'});
+  if(!r) return;
+  let lista=[...stato.promemoria];
+  if(r.__rimuovi){ lista=lista.filter(x=>x.id!==id); await setDoc(doc(db,'meta','promemoria'),{lista}); toast('Promemoria rimosso 🗑️'); return; }
+  const giorno=parseInt(r.giorno);
+  if(!r.nome){ toast('Scrivi cosa ricordare 📌'); return; }
+  if(isNaN(giorno)||giorno<1||giorno>31){ toast('Giorno tra 1 e 31 📅'); return; }
+  const nuovo={id:p?p.id:String(Date.now()), nome:r.nome, giorno, importo:r.importo!==''?parseFloat(r.importo):0, note:r.note};
+  lista = p ? lista.map(x=>x.id===id?nuovo:x) : [...lista, nuovo];
+  await setDoc(doc(db,'meta','promemoria'),{lista}); toast('Promemoria salvato 📌');
+}
+function renderGruppi(){
+  const box=document.getElementById('lista-gruppi');
+  if(!stato.gruppi.length){ box.innerHTML=`<div class="vuoto-msg" style="padding:14px">Nessun gruppo.${isAdmin()?' Crea i gruppi con "🎲 Crea auto" o "➕ Gruppo".':''}</div>`; return; }
+  box.innerHTML=stato.gruppi.map((g,i)=>`<div class="gruppo-riga">
+      <span class="info"><b>${esc(g.nome)}</b><small>${g.membri.map(esc).join(' · ')||'(vuoto)'}</small></span>
+      ${isAdmin()?`<span class="riga" style="gap:6px"><button class="btn btn-ghost btn-sm" onclick="modificaGruppo(${i})">✏️</button><button class="btn btn-ghost btn-sm" onclick="eliminaGruppo(${i})">🗑️</button></span>`:''}
+    </div>`).join('');
+}
+
+/* ====== AZIONI (solo admin) ====== */
+function puoiModificare(){
+  if(!pronto){ toast('Un attimo, mi sto collegando… ⏳'); return false; }
+  if(!isAdmin()){ toast('Solo gli admin possono modificare 👀 Accedi con Google.'); return false; }
+  return true;
+}
+async function aggiungiMembro(){
+  if(!puoiModificare()) return;
+  const inp=document.getElementById('nuovo-membro'), nome=inp.value.trim();
+  if(!nome) return; if(stato.membri.includes(nome)){ toast('C\'è già un '+nome+'! 😅'); return; }
+  inp.value=''; await setDoc(doc(db,'meta','membri'), {lista:[...stato.membri, nome]}); toast('Benvenuto '+nome+'! 🎉');
+}
+async function rimuoviMembro(nome){ if(!puoiModificare()) return; await setDoc(doc(db,'meta','membri'), {lista:stato.membri.filter(m=>m!==nome)}); }
+async function salvaImporto(){
+  if(!puoiModificare()) return;
+  const v=parseFloat(document.getElementById('importo-quota').value)||0, vecchio=stato.importoQuota;
+  if(v===vecchio) return;
+  // i mesi già iniziati senza importo specifico restano al vecchio importo, così la cassa non cambia
+  const idx=MESI.indexOf(meseCorrenteKey()), blocca={};
+  MESI.forEach((k,i)=>{ const haPagamenti=Object.values(stato.pagamenti[k]||{}).some(Boolean); if(stato.quoteMesi[k]==null && (i<=idx || haPagamenti)) blocca[k]=vecchio; });
+  if(Object.keys(blocca).length) await setDoc(doc(db,'meta','quoteMesi'), blocca, {merge:true});
+  await setDoc(doc(db,'meta','config'), {importoQuota:v}, {merge:true});
+  toast(`Quota standard ${euro(v)} dai prossimi mesi 💶`);
+}
+async function salvaImportoMese(standard){
+  if(!puoiModificare()) return;
+  const k=meseSel, mappa={...stato.quoteMesi};
+  if(standard){ delete mappa[k]; await setDoc(doc(db,'meta','quoteMesi'), mappa); toast(`${labelMese(k)}: torna alla quota standard`); return; }
+  const v=parseFloat(document.getElementById('importo-mese').value);
+  if(isNaN(v)||v<0){ toast('Metti un importo valido 💶'); return; }
+  mappa[k]=v; await setDoc(doc(db,'meta','quoteMesi'), mappa); toast(`Quota di ${labelMese(k)}: ${euro(v)} 💶`);
+}
+async function toggleQuota(m){ if(!puoiModificare()) return; const cur=(stato.pagamenti[meseSel]||{})[m]||false; await setDoc(doc(db,'pagamenti',meseSel), {[m]:!cur}, {merge:true}); if(!cur) toast(m+' ha pagato! 💸'); }
+async function aggiungiProdotto(){
+  if(!puoiModificare()) return;
+  const nome=document.getElementById('p-nome').value.trim();
+  const ven=parseFloat(document.getElementById('p-vendita').value);
+  const modo=document.getElementById('p-modo').value;
+  const qv=document.getElementById('p-qta').value;
+  if(!nome){ toast('Dagli un nome! 🙃'); return; } if(isNaN(ven)){ toast('Inserisci il prezzo di vendita 💶'); return; }
+  let acq=null;
+  if(qv!==''&&parseInt(qv)>0){
+    acq=leggiAcquisto(modo,qv,document.getElementById('p-pzcassa').value,document.getElementById('p-prezzo').value);
+    if(!acq){ toast(modo==='cassa'?'Controlla casse, pezzi per cassa e prezzo 📦':'Controlla pezzi e prezzo 🔹'); return; }
+  }
+  const ts=Date.now();
+  const lotti=acq?[{id:String(ts),qta:acq.pezzi,rimanenti:acq.pezzi,totale:acq.totale,ts,data:oggiStr()}]:[];
+  const ref=await addDoc(collection(db,'prodotti'), {nome,vendita:ven,acquisto:acq?acq.totale/acq.pezzi:0,stock:acq?acq.pezzi:0,lotti});
+  if(acq) await addDoc(collection(db,'movimenti'), {tipo:'acquisto',prodottoId:ref.id,nome,qta:acq.pezzi,totale:acq.totale,data:oggiStr(),ts});
+  ['p-nome','p-vendita','p-qta','p-pzcassa','p-prezzo'].forEach(id=>document.getElementById(id).value=''); anteprimaAcquisto(); toast(nome+' nel frigo! 🧊');
+}
+async function rifornisci(id){
+  if(!puoiModificare()) return;
+  const p=stato.frigo.prodotti.find(x=>x.id===id); if(!p) return;
+  const r=await modalInput(`Rifornisci — ${p.nome}`, [
+    {name:'modo',label:'Come lo hai comprato?',type:'select',value:'cassa',opzioni:[{v:'cassa',label:'📦 A casse'},{v:'pezzo',label:'🔹 A pezzi singoli'}]},
+    {name:'qta',label:'Quante casse (o quanti pezzi)?',type:'number',value:1,min:1,step:1},
+    {name:'pzCassa',label:'Pezzi per cassa (solo se a casse)',type:'number',value:'',min:1,step:1,placeholder:'Es. 24'},
+    {name:'prezzo',label:'Prezzo pagato (€ per cassa o € per pezzo)',type:'number',value:'',min:0,step:0.01}
+  ], {okLabel:'Aggiungi 📦'});
+  if(!r) return;
+  const acq=leggiAcquisto(r.modo,r.qta,r.pzCassa,r.prezzo);
+  if(!acq){ toast(r.modo==='cassa'?'Controlla casse, pezzi per cassa e prezzo 📦':'Controlla pezzi e prezzo 🔹'); return; }
+  const ts=Date.now();
+  const lotti=[...lottiDi(p), {id:String(ts),qta:acq.pezzi,rimanenti:acq.pezzi,totale:acq.totale,ts,data:oggiStr()}];
+  await updateDoc(doc(db,'prodotti',id), {stock:p.stock+acq.pezzi, lotti, acquisto:acq.totale/acq.pezzi});
+  await addDoc(collection(db,'movimenti'), {tipo:'acquisto',prodottoId:id,nome:p.nome,qta:acq.pezzi,totale:acq.totale,data:oggiStr(),ts});
+  toast(`+${acq.pezzi} pz di ${p.nome} (${euro(acq.totale)}) 📦`);
+}
+function modificaProdotto(id){
+  if(!puoiModificare()) return;
+  const p=stato.frigo.prodotti.find(x=>x.id===id); if(!p) return;
+  const lotti=[...lottiDi(p)].sort((a,b)=>(a.ts||0)-(b.ts||0));
+  const ov=document.getElementById('modal'), body=document.getElementById('modal-body');
+  body.classList.add('largo');
+  body.innerHTML=`<h3>✏️ Modifica — ${esc(p.nome)}</h3>
+    <div class="ch-griglia">
+      <label class="campo"><span>Nome</span><input type="text" id="mp-nome" value="${esc(p.nome)}"></label>
+      <label class="campo"><span>Prezzo vendita (€/pz)</span><input type="number" id="mp-vendita" min="0" step="0.1" value="${p.vendita}"></label>
+    </div>
+    <div class="ch-sez">🧺 Lotti caricati</div>
+    <p class="anteprima" style="margin:0 0 10px">Correggi quantità o prezzo di un lotto: le vendite già fatte restano, cambia solo il calcolo di costi e margini.</p>
+    ${lotti.length?lotti.map((l,i)=>{ const vend=l.qta-l.rimanenti; return `<div class="lotto-ed" id="le${i}">
+      <b>Lotto ${i+1}${l.data?` · ${esc(l.data)}`:''}</b>
+      <div class="ch-info">${l.qta} pz a ${euro4(costoPz(l))} (totale ${euro(l.totale)}) · venduti ${vend}, rimasti ${l.rimanenti}</div>
+      <div class="ch-griglia">
+        <label class="campo"><span>Comprato</span><select id="lm${i}"><option value="pezzo">🔹 A pezzi</option><option value="cassa">📦 A casse</option></select></label>
+        <label class="campo"><span id="lql${i}">N° pezzi</span><input type="number" id="lq${i}" min="1" step="1" value="${l.qta}"></label>
+        <label class="campo" id="lpcw${i}" style="display:none"><span>Pezzi per cassa</span><input type="number" id="lpc${i}" min="1" step="1"></label>
+        <label class="campo"><span id="lprl${i}">€ per pezzo</span><input type="number" id="lpr${i}" min="0" step="0.01" value="${Math.round(costoPz(l)*10000)/10000}"></label>
+      </div>
+      <div class="ch-esito" id="lesito${i}"></div></div>`; }).join(''):'<div class="vuoto-msg" style="padding:14px">Nessun lotto.</div>'}
+    <div class="modal-azioni">
+      <button type="button" class="btn btn-ghost btn-sm" id="m-no">Annulla</button>
+      <button type="button" class="btn btn-teal btn-sm" id="m-ok">💾 Salva</button>
+    </div>`;
+  ov.classList.add('aperto');
+  const sporchi=new Set();
+  function leggiLotto(i){
+    const l=lotti[i], modo=document.getElementById('lm'+i).value;
+    document.getElementById('lpcw'+i).style.display = modo==='cassa' ? '' : 'none';
+    document.getElementById('lql'+i).textContent = modo==='cassa' ? 'N° casse' : 'N° pezzi';
+    document.getElementById('lprl'+i).textContent = modo==='cassa' ? '€ per cassa' : '€ per pezzo';
+    const box=document.getElementById('le'+i), es=document.getElementById('lesito'+i);
+    if(!sporchi.has(i)){ box.className='lotto-ed'; es.textContent=''; return {ok:true,cambiato:false}; }
+    const a=leggiAcquisto(modo,document.getElementById('lq'+i).value,document.getElementById('lpc'+i).value,document.getElementById('lpr'+i).value);
+    const vend=l.qta-l.rimanenti;
+    if(!a){ box.className='lotto-ed err'; es.textContent = modo==='cassa'?'Controlla casse, pezzi per cassa e prezzo':'Controlla pezzi e prezzo'; return {ok:false}; }
+    if(a.pezzi<vend){ box.className='lotto-ed err'; es.textContent=`Non può essere meno di ${vend} pz: tanti ne sono già stati venduti`; return {ok:false}; }
+    box.className='lotto-ed mod'; es.textContent=`Nuovo: ${a.pezzi} pz · totale ${euro(a.totale)} · ${euro4(a.totale/a.pezzi)} al pezzo`;
+    return {ok:true,cambiato:true,pezzi:a.pezzi,totale:a.totale};
+  }
+  lotti.forEach((l,i)=>['lm','lq','lpc','lpr'].forEach(pre=>{ const e=document.getElementById(pre+i); const f=()=>{ sporchi.add(i); leggiLotto(i); }; e.addEventListener('input',f); e.addEventListener('change',f); }));
+  const chiudi=()=>{ ov.classList.remove('aperto'); body.classList.remove('largo'); ov.onclick=null; };
+  document.getElementById('m-no').onclick=chiudi;
+  document.getElementById('m-ok').onclick=async()=>{
+    const nome=document.getElementById('mp-nome').value.trim(), ven=parseFloat(document.getElementById('mp-vendita').value);
+    if(!nome){ toast('Dagli un nome! 🙃'); return; } if(isNaN(ven)||ven<0){ toast('Prezzo di vendita non valido 💶'); return; }
+    const esiti=lotti.map((l,i)=>leggiLotto(i));
+    if(esiti.some(e=>!e.ok)){ toast('Correggi i lotti in rosso ✋'); return; }
+    const batch=writeBatch(db);
+    const cambiCosto={}; // lottoId -> differenza di costo al pezzo
+    const nuovi=lotti.map((l,i)=>{
+      const e=esiti[i]; if(!e.cambiato) return l;
+      const vend=l.qta-l.rimanenti, nl={...l, qta:e.pezzi, totale:e.totale, rimanenti:e.pezzi-vend};
+      cambiCosto[l.id]=costoPz(nl)-costoPz(l);
+      const mov=stato.frigo.movimenti.find(m=>m.tipo==='acquisto'&&m.prodottoId===p.id&&l.ts&&m.ts===l.ts);
+      if(mov) batch.update(doc(db,'movimenti',mov.id), {qta:e.pezzi, totale:e.totale});
+      return nl;
+    });
+    const stock=nuovi.length ? nuovi.reduce((s,l)=>s+l.rimanenti,0) : p.stock;
+    const ultimo=nuovi[nuovi.length-1];
+    batch.update(doc(db,'prodotti',p.id), {nome, vendita:ven, lotti:nuovi, stock, acquisto: ultimo?costoPz(ultimo):(p.acquisto||0)});
+    // ricalcola il guadagno delle chiusure che hanno venduto pezzi dei lotti corretti
+    if(Object.keys(cambiCosto).length) stato.chiusure.forEach(c=>{
+      let delta=0;
+      const righe=(c.righe||[]).map(rg=>{
+        if(rg.prodottoId!==p.id||!rg.consumi) return rg;
+        const d=rg.consumi.reduce((s,x)=>s+(cambiCosto[x.lottoId]!=null?x.n*cambiCosto[x.lottoId]:0),0);
+        if(!d) return rg; delta+=d; return {...rg, costo:r2((rg.costo||0)+d)};
+      });
+      if(delta) batch.update(doc(db,'chiusure',c.id), {righe, costoVenduto:r2((c.costoVenduto||0)+delta), guadagno:r2((c.guadagno||0)-delta)});
+    });
+    try{ await batch.commit(); chiudi(); toast('Prodotto aggiornato ✏️'); }
+    catch(e){ console.error(e); toast('Salvataggio non riuscito 😕'); }
+  };
+}
+async function eliminaProdotto(id){
+  if(!puoiModificare()) return;
+  const p=stato.frigo.prodotti.find(x=>x.id===id); if(!p) return;
+  const r=await modalInput(`Eliminare ${p.nome}?`, [], {okLabel:'Sì, elimina 🗑️'});
+  if(r===null) return; await deleteDoc(doc(db,'prodotti',id)); toast(p.nome+' eliminato 🧾');
+}
+async function aggiungiMovimento(){
+  if(!puoiModificare()) return;
+  const r=await modalInput('Aggiungi movimento a mano', [
+    {name:'tipo',label:'Tipo',type:'select',value:'acquisto',opzioni:[{v:'acquisto',label:'🛒 Acquisto (spesa)'},{v:'vendita',label:'🤑 Vendita (incasso)'}]},
+    {name:'nome',label:'Descrizione',type:'text',value:'',placeholder:'Es. Cassa birre'},
+    {name:'qta',label:'Quantità',type:'number',value:1,min:1,step:1},
+    {name:'totale',label:'Importo totale (€)',type:'number',value:'',min:0,step:0.01}
+  ], {okLabel:'Aggiungi'});
+  if(!r) return; const tot=parseFloat(r.totale);
+  if(!r.nome){ toast('Metti una descrizione 🙃'); return; } if(isNaN(tot)){ toast('Metti un importo 💶'); return; }
+  await addDoc(collection(db,'movimenti'), {tipo:r.tipo==='vendita'?'vendita':'acquisto', prodottoId:'', nome:r.nome, qta:parseInt(r.qta)||1, totale:tot, data:oggiStr(), ts:Date.now()});
+  toast('Movimento aggiunto 🧾');
+}
+async function eliminaMovimento(id){
+  if(!puoiModificare()) return;
+  const r=await modalInput('Eliminare questo movimento?', [], {okLabel:'Sì, elimina 🗑️'});
+  if(r===null) return; await deleteDoc(doc(db,'movimenti',id)); toast('Movimento eliminato');
+}
+async function assegnaTurno(key,label){
+  if(!puoiModificare()) return;
+  const sugg=[...stato.gruppi.map(g=>g.nome), ...stato.membri];
+  const r=await modalInput(`Turno pulizie — ${label}`, [{name:'nome',label:'Chi pulisce? 🧹',type:'text',value:stato.pulizie[key]||'',lista:sugg,placeholder:'Gruppo o nome'}], {rimuovi:!!stato.pulizie[key], okLabel:'Salva'});
+  if(r===null) return;
+  if(r.__rimuovi||!r.nome){ await deleteDoc(doc(db,'pulizie',key)); toast('Turno liberato 🧽'); }
+  else { await setDoc(doc(db,'pulizie',key), {nome:r.nome}); toast(`Turno assegnato 🧹`); }
+}
+
+/* ---- GRUPPI: azioni ---- */
+async function salvaGruppi(lista){ await setDoc(doc(db,'meta','gruppi'), {lista}); }
+async function generaGruppiAuto(){
+  if(!puoiModificare()) return;
+  if(!stato.membri.length){ toast('Aggiungi prima i ragazzi nelle Quote 👥'); return; }
+  const r=await modalInput('Crea gruppi automaticamente', [{name:'dim',label:'Persone per gruppo',type:'number',value:5,min:1,step:1}], {okLabel:'Mescola e crea 🎲'});
+  if(!r) return; const dim=Math.max(1,parseInt(r.dim)||5);
+  const arr=[...stato.membri]; for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  const gruppi=[]; for(let i=0;i<arr.length;i+=dim) gruppi.push({nome:`Gruppo ${gruppi.length+1}`, membri:arr.slice(i,i+dim)});
+  await salvaGruppi(gruppi); toast(`${gruppi.length} gruppi creati 👥`);
+}
+async function aggiungiGruppo(){
+  if(!puoiModificare()) return;
+  const r=await modalInput('Nuovo gruppo', [
+    {name:'nome',label:'Nome gruppo',type:'text',value:`Gruppo ${stato.gruppi.length+1}`},
+    {name:'membri',label:'Membri (separati da virgola)',type:'text',value:'',placeholder:'Es. Marco, Gaia, Elena'}
+  ], {okLabel:'Crea'});
+  if(!r||!r.nome) return;
+  const membri=r.membri.split(',').map(s=>s.trim()).filter(Boolean);
+  await salvaGruppi([...stato.gruppi, {nome:r.nome, membri}]); toast('Gruppo aggiunto 👥');
+}
+async function modificaGruppo(i){
+  if(!puoiModificare()) return;
+  const g=stato.gruppi[i]; if(!g) return;
+  const r=await modalInput(`Modifica — ${g.nome}`, [
+    {name:'nome',label:'Nome gruppo',type:'text',value:g.nome},
+    {name:'membri',label:'Membri (separati da virgola)',type:'text',value:(g.membri||[]).join(', ')}
+  ], {rimuovi:true, okLabel:'Salva'});
+  if(r===null) return;
+  const lista=[...stato.gruppi];
+  if(r.__rimuovi){ lista.splice(i,1); } else { lista[i]={nome:r.nome||g.nome, membri:r.membri.split(',').map(s=>s.trim()).filter(Boolean)}; }
+  await salvaGruppi(lista); toast('Gruppi aggiornati 👥');
+}
+async function eliminaGruppo(i){
+  if(!puoiModificare()) return;
+  const lista=[...stato.gruppi]; lista.splice(i,1); await salvaGruppi(lista); toast('Gruppo eliminato');
+}
+async function generaTurni(){
+  if(!puoiModificare()) return;
+  if(!stato.gruppi.length){ toast('Prima crea i gruppi 👥'); return; }
+  const r=await modalInput('Genera turni a rotazione', [
+    {name:'giorno',label:'Giorno della settimana',type:'select',value:'6',opzioni:[{v:'1',label:'Lunedì'},{v:'2',label:'Martedì'},{v:'3',label:'Mercoledì'},{v:'4',label:'Giovedì'},{v:'5',label:'Venerdì'},{v:'6',label:'Sabato'},{v:'0',label:'Domenica'}]},
+    {name:'cadenza',label:'Ogni quanto',type:'select',value:'7',opzioni:[{v:'7',label:'Ogni settimana'},{v:'14',label:'Ogni 2 settimane'}]},
+    {name:'inizio',label:'Data di inizio',type:'date',value:oggiISO()},
+    {name:'quante',label:'Quanti turni',type:'number',value:12,min:1,step:1}
+  ], {okLabel:'Genera 🔁'});
+  if(!r) return;
+  const dow=parseInt(r.giorno), step=parseInt(r.cadenza)||7, quante=Math.max(1,parseInt(r.quante)||12);
+  if(!r.inizio){ toast('Scegli una data di inizio 📅'); return; }
+  let d=new Date(r.inizio+'T00:00:00'); if(isNaN(d)){ toast('Data non valida'); return; }
+  while(d.getDay()!==dow) d.setDate(d.getDate()+1);
+  const batch=writeBatch(db);
+  for(let i=0;i<quante;i++){ batch.set(doc(db,'pulizie', isoKey(d)), {nome: stato.gruppi[i%stato.gruppi.length].nome}); d.setDate(d.getDate()+step); }
+  await batch.commit(); toast(`${quante} turni generati 🔁`);
+  mostra('pulizie');
+}
+
+/* ---- SPESE: azioni ---- */
+async function aggiungiSpesa(){
+  if(!puoiModificare()) return;
+  const tipo=document.getElementById('s-tipo').value;
+  const nome=document.getElementById('s-nome').value.trim();
+  const importo=parseFloat(document.getElementById('s-importo').value);
+  if(!nome){ toast('Scrivi cosa hai pagato 🙃'); return; }
+  if(isNaN(importo)){ toast('Metti l\'importo 💶'); return; }
+  await addDoc(collection(db,'spese'), {tipo, nome, importo, data:oggiStr(), ts:Date.now()});
+  document.getElementById('s-nome').value=''; document.getElementById('s-importo').value=''; toast('Spesa registrata 🧾');
+}
+async function eliminaSpesa(id){
+  if(!puoiModificare()) return;
+  const r=await modalInput('Eliminare questa spesa?', [], {okLabel:'Sì, elimina 🗑️'});
+  if(r===null) return; await deleteDoc(doc(db,'spese',id)); toast('Spesa eliminata');
+}
+
+/* ====== BACKUP / IMPORT / RESET ====== */
+function esporta(){
+  const blob=new Blob([JSON.stringify(stato,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`locale-backup-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(a.href); toast('Backup scaricato 💾');
+}
+function importa(ev){
+  const file=ev.target.files[0]; if(!file) return;
+  if(!puoiModificare()){ ev.target.value=''; return; }
+  const r=new FileReader();
+  r.onload=async()=>{
+    try{
+      const d=JSON.parse(r.result); const batch=writeBatch(db);
+      if(Array.isArray(d.membri)) batch.set(doc(db,'meta','membri'),{lista:d.membri});
+      if(d.importoQuota!=null) batch.set(doc(db,'meta','config'),{importoQuota:d.importoQuota});
+      if(d.quoteMesi) batch.set(doc(db,'meta','quoteMesi'),d.quoteMesi);
+      if(d.promemoria) batch.set(doc(db,'meta','promemoria'),{lista:d.promemoria});
+      if(Array.isArray(d.gruppi)) batch.set(doc(db,'meta','gruppi'),{lista:d.gruppi});
+      Object.entries(d.pagamenti||{}).forEach(([mese,map])=>batch.set(doc(db,'pagamenti',mese),map));
+      Object.entries(d.pulizie||{}).forEach(([data,nome])=>batch.set(doc(db,'pulizie',data),{nome}));
+      await batch.commit();
+      for(const p of (d.frigo?.prodotti||[])) await addDoc(collection(db,'prodotti'),{nome:p.nome,acquisto:p.acquisto||0,vendita:p.vendita,stock:p.stock,...(Array.isArray(p.lotti)?{lotti:p.lotti}:{})});
+      for(const m of (d.frigo?.movimenti||[])) await addDoc(collection(db,'movimenti'),{tipo:m.tipo,prodottoId:m.prodottoId||'',nome:m.nome,qta:m.qta,totale:m.totale,data:m.data||'',ts:m.ts||Date.now(),...(m.chiusuraId?{chiusuraId:m.chiusuraId}:{})});
+      for(const c of (d.chiusure||[])){ const {id,...resto}=c; if(id) await setDoc(doc(db,'chiusure',id),resto); else await addDoc(collection(db,'chiusure'),resto); }
+      for(const s of (d.spese||[])) await addDoc(collection(db,'spese'),{tipo:s.tipo,nome:s.nome,importo:s.importo,pagatoDa:s.pagatoDa||'',data:s.data||'',ts:s.ts||Date.now()});
+      toast('Dati importati! 📥✅');
+    }catch(e){ console.error(e); toast('File non valido 😵'); }
+    ev.target.value='';
+  };
+  r.readAsText(file);
+}
+async function resetTotale(){
+  if(!puoiModificare()) return;
+  const r=await modalInput('Azzerare TUTTO per tutti?', [], {okLabel:'Sì, cancella tutto 🧨'});
+  if(r===null) return;
+  for(const c of ['pagamenti','prodotti','movimenti','spese','pulizie','chiusure']){
+    const snap=await getDocs(collection(db,c)); const batch=writeBatch(db); snap.forEach(dc=>batch.delete(dc.ref)); await batch.commit();
+  }
+  await deleteDoc(doc(db,'meta','membri')).catch(()=>{});
+  await deleteDoc(doc(db,'meta','config')).catch(()=>{});
+  await deleteDoc(doc(db,'meta','quoteMesi')).catch(()=>{});
+  await deleteDoc(doc(db,'meta','promemoria')).catch(()=>{});
+  await deleteDoc(doc(db,'meta','gruppi')).catch(()=>{});
+  toast('Tutto azzerato 🧨');
+}
+
+/* ====== CORIANDOLI + WELCOME ====== */
+function lanciaCoriandoli(){
+  const c=document.getElementById('confetti'), ctx=c.getContext('2d'); c.width=innerWidth; c.height=innerHeight;
+  const colori=['#ff5d73','#ffd166','#2ec4b6','#9b5de5','#4d96ff','#ff8c42'], parts=[];
+  for(let i=0;i<150;i++) parts.push({x:Math.random()*c.width,y:-20-Math.random()*c.height*.6,r:6+Math.random()*9,col:colori[~~(Math.random()*colori.length)],vy:2+Math.random()*4,vx:-2+Math.random()*4,rot:Math.random()*6.28,vr:-.2+Math.random()*.4});
+  let f=0;(function tick(){ ctx.clearRect(0,0,c.width,c.height);
+    parts.forEach(p=>{ p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;p.vy+=.03; ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.col;ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*.6);ctx.restore(); });
+    if(++f<210) requestAnimationFrame(tick); else ctx.clearRect(0,0,c.width,c.height); })();
+}
+function entra(){ document.getElementById('welcome').classList.add('via'); lanciaCoriandoli(); }
+
+/* ====== RUOLO / LOGIN ====== */
+function applicaRuolo(){
+  const admin=isAdmin();
+  document.body.classList.toggle('sola-lettura', !admin);
+  const b=document.getElementById('btn-auth'), bad=document.getElementById('badge-ruolo');
+  if(utente && !utente.isAnonymous){
+    const nome=(utente.displayName||utente.email||'').split(' ')[0];
+    b.textContent='🚪 Esci';
+    bad.textContent = admin ? `👑 Admin · ${esc(nome)}` : '👀 Sola lettura';
+    bad.style.background = admin ? 'var(--teal)' : '#eee'; bad.style.color = admin ? '#fff' : '#777';
+  } else { b.textContent='🔑 Accedi admin'; bad.textContent='👀 Ospite'; bad.style.background='#eee'; bad.style.color='#777'; }
+  refresh();
+}
+async function toggleAuth(){
+  if(!auth) return;
+  try{ if(utente && !utente.isAnonymous){ await signOut(auth); } else { await signInWithPopup(auth, new GoogleAuthProvider()); } }
+  catch(e){ console.error(e); toast('Accesso non riuscito 😕 (controlla i domini autorizzati in Firebase)'); }
+}
+
+/* ====== FIREBASE ====== */
+function avviaListener(){
+  onSnapshot(doc(db,'meta','membri'), s=>{ stato.membri=(s.data()?.lista)||[]; refresh(); }, errOff);
+  onSnapshot(doc(db,'meta','promemoria'), s=>{ stato.promemoria=(s.data()||{}).lista||[]; refresh(); }, errOff);
+  onSnapshot(doc(db,'meta','quoteMesi'), s=>{ stato.quoteMesi=s.data()||{}; refresh(); }, errOff);
+  onSnapshot(doc(db,'meta','config'), s=>{ stato.importoQuota=s.data()?.importoQuota??10; refresh(); }, errOff);
+  onSnapshot(doc(db,'meta','gruppi'), s=>{ stato.gruppi=(s.data()?.lista)||[]; refresh(); }, errOff);
+  onSnapshot(collection(db,'pagamenti'), s=>{ const o={}; s.forEach(d=>o[d.id]=d.data()); stato.pagamenti=o; refresh(); }, errOff);
+  onSnapshot(collection(db,'prodotti'), s=>{ stato.frigo.prodotti=s.docs.map(d=>({id:d.id,...d.data()})); refresh(); }, errOff);
+  onSnapshot(query(collection(db,'movimenti'), orderBy('ts')), s=>{ stato.frigo.movimenti=s.docs.map(d=>({id:d.id,...d.data()})); refresh(); }, errOff);
+  onSnapshot(query(collection(db,'spese'), orderBy('ts')), s=>{ stato.spese=s.docs.map(d=>({id:d.id,...d.data()})); refresh(); }, errOff);
+  onSnapshot(query(collection(db,'chiusure'), orderBy('ts')), s=>{ stato.chiusure=s.docs.map(d=>({id:d.id,...d.data()})); refresh(); }, errOff);
+  onSnapshot(collection(db,'pulizie'), s=>{ const o={}; s.forEach(d=>o[d.id]=d.data()?.nome); stato.pulizie=o; refresh(); }, errOff);
+}
+function errOff(e){ console.error(e); setStato('🔴 Errore'); }
+function configMancante(){ return Object.values(firebaseConfig).some(v=>String(v).startsWith('INCOLLA_QUI')); }
+function avvia(){
+  if(configMancante()){ document.getElementById('config-banner').style.display='block'; setStato('⚙️ Config mancante'); return; }
+  try{
+    const app=initializeApp(firebaseConfig); db=getFirestore(app); auth=getAuth(app); setStato('🔌 Connessione…');
+    onAuthStateChanged(auth, async user=>{
+      if(!user){ try{ await signInAnonymously(auth); }catch(e){ console.error(e); setStato('🔴 Auth KO'); toast('Login non riuscito: abilita "Anonimo" in Firebase 🔑'); } return; }
+      utente=user; ruolo=isAdminUser(user)?'admin':'viewer'; pronto=true; setStato('🟢 Online');
+      if(!listenerAvviati){ avviaListener(); listenerAvviati=true; }
+      if(!user.isAnonymous && ruolo!=='admin') toast('Questo account non è tra gli admin: resti in sola lettura 👀');
+      applicaRuolo();
+    });
+  }catch(e){ console.error(e); setStato('🔴 Errore'); }
+}
+
+Object.assign(window, {
+  entra, mostra, aggiungiMembro, rimuoviMembro, salvaImporto, salvaImportoMese, cambiaMese, toggleFlusso, modificaPromemoria, renderQuote, toggleQuota,
+  aggiungiProdotto, rifornisci, modificaProdotto, eliminaProdotto, aggiungiMovimento, eliminaMovimento,
+  anteprimaAcquisto, apriChiusura, dettaglioChiusura, eliminaChiusura,
+  aggiungiSpesa, eliminaSpesa,
+  cambiaMeseCal, assegnaTurno, generaGruppiAuto, aggiungiGruppo, modificaGruppo, eliminaGruppo, generaTurni,
+  esporta, importa, resetTotale, toggleAuth
+});
+
+popolaSelectMese(); initCal(); anteprimaAcquisto(); renderHome(); lanciaCoriandoli(); avvia();
+</script>
+</body>
+</html>
